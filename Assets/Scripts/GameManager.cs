@@ -6,7 +6,6 @@ using UnityEngine.InputSystem;
 public class GameManager : MonoBehaviour
 {
     public Song[] songs;
-    public PlayerInputManager playerManager;   
     public Triad.Synth synth;
     public Ring ring;
     public Transform ringTemplate;        
@@ -58,12 +57,11 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         song = songs[0];
-        playerManager.onPlayerJoined += OnPlayerJoined;              // PlayerManager is set to Invoke CSharp Events in the scene, or these never fire
-        playerManager.onPlayerLeft += OnPlayerLeft;
     }
 
     void Start() { coreColour = coreLine.color; Restart(); }
 
+    // the PlayerInputManager on this same object sends these by name (Send Messages), like the players' actions
     void OnPlayerJoined(PlayerInput input)
     {
         var voice = input.GetComponent<PlayerVoice>();

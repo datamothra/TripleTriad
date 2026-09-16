@@ -82,12 +82,11 @@ public static class TriadSetup
 
         manager.synth = new GameObject("Synth").AddComponent<Triad.Synth>();      // the only sound source: synthesized piano strikes
 
-        // one player per controller
-        var inputManager = new GameObject("PlayerManager").AddComponent<PlayerInputManager>();
+        // one player per controller. it sits on the GameManager object so Send Messages reaches OnPlayerJoined by name
+        var inputManager = manager.gameObject.AddComponent<PlayerInputManager>();
         inputManager.playerPrefab = playerPrefab;
         inputManager.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed;
-        inputManager.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;   // so GameManager gets onPlayerJoined
-        manager.playerManager = inputManager;
+        inputManager.notificationBehavior = PlayerNotifications.SendMessages;
         var managerSo = new SerializedObject(inputManager);       // maxPlayerCount is read-only at runtime, so set the field
         var maxProp = managerSo.FindProperty("m_MaxPlayerCount");
         if (maxProp != null) { maxProp.intValue = 3; managerSo.ApplyModifiedPropertiesWithoutUndo(); }

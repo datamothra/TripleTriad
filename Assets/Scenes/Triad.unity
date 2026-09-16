@@ -666,36 +666,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 251612729}
   m_CullTransparentMesh: 1
---- !u!1 &253276658
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 253276660}
-  - component: {fileID: 253276659}
-  m_Layer: 0
-  m_Name: PlayerManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
 --- !u!114 &253276659
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 253276658}
+  m_GameObject: {fileID: 1060368622}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 621567455fd1c4ceb811cc8a00b6a1a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInputManager
-  m_NotificationBehavior: 3
+  m_NotificationBehavior: 0
   m_MaxPlayerCount: 3
   m_AllowJoining: 1
   m_JoinBehavior: 0
@@ -728,21 +711,6 @@ MonoBehaviour:
     y: 0
     width: 1
     height: 1
---- !u!4 &253276660
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 253276658}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &283075953
 GameObject:
   m_ObjectHideFlags: 0
@@ -2901,6 +2869,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1060368624}
   - component: {fileID: 1060368623}
+  - component: {fileID: 253276659}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -2924,7 +2893,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b033c441a90354d95a74adc2424c62e0, type: 2}
   - {fileID: 11400000, guid: 44e44da13480a43cab5466b8663752c2, type: 2}
   - {fileID: 11400000, guid: 556ed0115f4014bfe8cb5b7edc51c70b, type: 2}
-  playerManager: {fileID: 253276659}
   synth: {fileID: 1492246265}
   ring: {fileID: 735192206}
   ringTemplate: {fileID: 390533129}
@@ -5232,5 +5200,4 @@ SceneRoots:
   - {fileID: 189445993}
   - {fileID: 1160625715}
   - {fileID: 1492246266}
-  - {fileID: 253276660}
   - {fileID: 709908951}
