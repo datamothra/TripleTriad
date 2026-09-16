@@ -1,12 +1,9 @@
 using System.Linq;
 using TMPro;
 using UnityEditor;
-using UnityEditor.Events;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 // Triad → Build Scene: creates the song assets, the Player prefab, and a scene with everything wired
@@ -96,36 +93,20 @@ public static class TriadSetup
         if (maxProp != null) { maxProp.intValue = 3; managerSo.ApplyModifiedPropertiesWithoutUndo(); }
         else Debug.LogWarning("Triad: could not set Max Player Count; set it to 3 on PlayerManager by hand.");
 
-        // speed slider, wired to the game manager as a persistent UnityEvent listener, like dragging it in the inspector
-        var canvasGo = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        // the HUD: text only, so no EventSystem or raycaster. speed is a field on GameManager, set before Play
+        var canvasGo = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler));
         var canvas = canvasGo.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         var scaler = canvasGo.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1280, 720);
 
-        var sliderGo = DefaultControls.CreateSlider(new DefaultControls.Resources());
-        sliderGo.name = "SpeedSlider";
-        sliderGo.transform.SetParent(canvasGo.transform, false);
-        var srt = sliderGo.GetComponent<RectTransform>();
-        srt.anchorMin = srt.anchorMax = srt.pivot = new Vector2(1, 0);
-        srt.anchoredPosition = new Vector2(-24, 24);
-        srt.sizeDelta = new Vector2(220, 20);
-        var slider = sliderGo.GetComponent<Slider>();
-        slider.minValue = 0.4f; slider.maxValue = 2.5f; slider.value = 1f;
-        Tint(sliderGo, "Background", new Color(1, 1, 1, 0.15f));
-        Tint(sliderGo, "Fill Area/Fill", Accent);
-        Tint(sliderGo, "Handle Slide Area/Handle", Color.white);
-        UnityEventTools.AddPersistentListener(slider.onValueChanged, manager.SetSpeed);
-
-        manager.speedLabel = HudText(canvasGo.transform, "SpeedLabel", "SPEED 1.0x", 14, TextAlignmentOptions.Right, new Vector2(1, 0), new Vector2(-24, 50), new Vector2(220, 20));
+        manager.speedLabel = HudText(canvasGo.transform, "SpeedLabel", "SPEED 1.0x", 14, TextAlignmentOptions.Right, new Vector2(1, 0), new Vector2(-24, 24), new Vector2(220, 20));
         manager.titleLabel = HudText(canvasGo.transform, "Title", "", 16, TextAlignmentOptions.Center, new Vector2(0.5f, 1), new Vector2(0, -16), new Vector2(900, 24));
         manager.scoreLabel = HudText(canvasGo.transform, "Score", "", 22, TextAlignmentOptions.TopRight, new Vector2(1, 1), new Vector2(-24, -16), new Vector2(300, 120));
         manager.bannerLabel = HudText(canvasGo.transform, "Banner", "", 26, TextAlignmentOptions.Center, new Vector2(0.5f, 0), new Vector2(0, 22), new Vector2(1100, 34));
         manager.bannerLabel.fontStyle = FontStyles.Bold;
         manager.scoreLabel.fontStyle = FontStyles.Bold;
-
-        new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
         EditorSceneManager.SaveScene(scene, "Assets/Scenes/Triad.unity");
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene("Assets/Scenes/Triad.unity", true) };
@@ -296,12 +277,6 @@ public static class TriadSetup
         rt.anchoredPosition = pos;
         rt.sizeDelta = sizeDelta;
         return t;
-    }
-
-    static void Tint(GameObject sliderGo, string path, Color c)
-    {
-        var t = sliderGo.transform.Find(path);
-        if (t != null && t.TryGetComponent<Image>(out var img)) img.color = c;
     }
 
     static void Folder(string path)

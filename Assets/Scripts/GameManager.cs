@@ -24,7 +24,7 @@ public class GameManager : MonoBehaviour
 
 
     public float spawnScale = 24f, landScale = 3.5f;
-    [Range(0.4f, 2.5f)] public float speed = 1f;
+    [Range(0.4f, 2.5f)] public float speed = 1f;   // set in the Inspector before pressing Play
 
     class Marker { public int index; public float land, beats; public GameObject go; }
     readonly List<Marker> markers = new List<Marker>();
@@ -36,7 +36,6 @@ public class GameManager : MonoBehaviour
     bool gameOver;
     Color coreColour;                     // the red line's colour as set in the Inspector; only its alpha pulses
 
-    public void SetSpeed(float s) { speed = s; }              // the UI Slider calls this, but i dont htink i set it up right lol
     public static Vector3 Polar(float r, int pitchClass)
     {
         float a = (90f - pitchClass * 30f) * Mathf.Deg2Rad;      // C at the top, clockwise
