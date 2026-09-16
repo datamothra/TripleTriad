@@ -1,0 +1,215 @@
+using System.Collections.Generic;
+using System.Linq;
+using TMPro;
+using UnityEngine;
+using UnityEngine.InputSystem;
+public class GameManager : MonoBehaviour
+{
+    public Song[] songs;
+    public PlayerInputManager playerManager;   
+    public Triad.Synth synth;
+    public RingMesh ring;
+    public Transform ringTemplate;        
+    public Transform coreLine;
+    public ChordTriangle triangle;
+    public TMP_Text chordLabel, chordNotes, titleLabel, scoreLabel, bannerLabel, speedLabel;
+    public Color accent = new Color(0.875f, 0.686f, 0.196f);
+
+
+
+// leniency on timing
+    public float earlyBeats = 0.5f;       
+    public float lateBeats = 0.25f;      
+
+
+
+    public float spawnScale = 24f, landScale = 3.5f;
+    [Range(0.4f, 2.5f)] public float speed = 1f;
+
+    class Marker { public int index; public float land, beats; public GameObject go; }
+    readonly List<Marker> markers = new List<Marker>();
+    readonly List<PlayerVoice> players = new List<PlayerVoice>();
+    public List<PlayerVoice> Players => players;
+    Song song; int songIndex;
+    int nextIndex, score, lives, combo, lastPlayerCount, lastBeatInt;
+    float songBeat, nextLand, beatPulse, bannerUntil;
+    bool gameOver;
+
+    public void SetSpeed(float s) { speed = s; }              // the UI Slider calls this, but i dont htink i set it up right lol
+    public static Vector3 Polar(float r, int pitchClass)
+    {
+        float a = (90f - pitchClass * 30f) * Mathf.Deg2Rad;      // C at the top, clockwise
+        return new Vector3(Mathf.Cos(a) * r, Mathf.Sin(a) * r, 0f);
+    }
+
+    float Bpm => song.bpm * speed;
+    float BeatSeconds => 60f / Bpm;
+    Song.Entry Entry(int i) => song.entries[i % song.entries.Count];
+    Marker Current => markers.Count > 0 ? markers[0] : null;          // the chord about to land
+    float CountInBeats => Entry(0).beats;
+
+    void Awake()
+    {
+        song = songs[0];
+        playerManager.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;   // the join events below only fire in this mode
+        playerManager.onPlayerJoined += OnPlayerJoined;
+        playerManager.onPlayerLeft += OnPlayerLeft;
+    }
+
+    void Start() { Restart(); }
+
+    void OnPlayerJoined(PlayerInput input)
+    {
+        var voice = input.GetComponent<PlayerVoice>();
+        voice.game = this;
+        voice.synth = synth;
+        players.Add(voice);
+    }
+
+    void OnPlayerLeft(PlayerInput input) { players.Remove(input.GetComponent<PlayerVoice>()); }
+
+    void Update()
+    {
+        float dt = Time.deltaTime; //delta time shorthand
+
+        bool running = !gameOver && players.Count == 3;
+        if (!gameOver && players.Count < 3)
+        {
+            ClearMarkers();
+            Say("waiting for " + (3 - players.Count) + " more controller" + (players.Count == 2 ? "" : "s") + ": press Cross to join", 1f);
+        }
+        if (running)
+        {
+            if (lastPlayerCount < 3) StartClock();
+            songBeat += dt * Bpm / 60f;
+            int beat = Mathf.FloorToInt(songBeat);
+            if (beat != lastBeatInt) { lastBeatInt = beat; beatPulse = 1f; }
+
+            while (songBeat >= nextLand - Entry(nextIndex).beats) Spawn();     // a ring appears one chord-length before its bar line
+            foreach (var m in markers)
+                m.go.transform.localScale = Vector3.one * Mathf.LerpUnclamped(landScale, spawnScale, (m.land - songBeat) / m.beats);
+            if (Current != null && songBeat >= Current.land) Judge(players);
+        }
+        beatPulse = Mathf.Max(0f, beatPulse - dt * 5f);
+        lastPlayerCount = players.Count;
+
+        // wedges: the chord's three notes light up (root strongest), players lighten the one they stand in
+        ring.ClearTints();
+        var cur = Current;
+        int[] tones = cur != null ? Chord.Tones(Entry(cur.index).root, Entry(cur.index).quality) : null;
+        if (tones != null)
+        {
+            ring.Tint(tones[0], new Color(accent.r, accent.g, accent.b, 0.70f));
+            ring.Tint(tones[1], new Color(accent.r, accent.g, accent.b, 0.45f));
+            ring.Tint(tones[2], new Color(accent.r, accent.g, accent.b, 0.45f));
+        }
+        foreach (var p in players) ring.Tint(p.wedge, new Color(1, 1, 1, 0.25f));
+        triangle.inPosition = tones != null && players.Count == 3 && new HashSet<int>(players.Select(p => p.wedge)).SetEquals(tones);
+
+        // core: the count-in, then the chord that is coming
+        if (running && songBeat < -CountInBeats)
+        {
+            chordLabel.text = (Mathf.FloorToInt(songBeat + 2f * CountInBeats) + 1).ToString();
+            chordNotes.text = "";
+        }
+        else if (tones != null)
+        {
+            var e = Entry(cur.index);
+            chordLabel.text = Chord.Label(e.root, e.quality);
+            chordNotes.text = Chord.Names[tones[0]] + " + " + Chord.Names[tones[1]] + " + " + Chord.Names[tones[2]];
+        }
+        else { chordLabel.text = ""; chordNotes.text = ""; }
+        chordLabel.color = accent;
+
+        // the red line is the metronome
+        coreLine.localScale = Vector3.one * (landScale + 0.22f * beatPulse);
+        if (coreLine.TryGetComponent<SpriteRenderer>(out var coreSr)) coreSr.color = new Color(0.784f, 0.294f, 0.294f, 0.7f + 0.3f * beatPulse);
+
+        int shown = cur != null ? cur.index : nextIndex;
+        titleLabel.text = song.name + "   " + song.meter + "   " + Bpm.ToString("0") + " bpm   chord " + (shown % song.entries.Count + 1) + " of " + song.entries.Count + "     L1 / R1 change song   Options restart";
+        scoreLabel.text = "TEAM " + score + "\nlives " + lives + (combo > 1 ? "\ncombo x" + combo : "") + (players.Count < 3 ? "\n" + players.Count + "/3 joined" : "");
+        speedLabel.text = "SPEED " + speed.ToString("0.0") + "x";
+        if (Time.time > bannerUntil) bannerLabel.text = "";
+    }
+
+    void Spawn()
+    {
+        var e = Entry(nextIndex);
+        var go = Instantiate(ringTemplate.gameObject, ringTemplate.parent);
+        go.name = "Ring " + Chord.Label(e.root, e.quality);
+        go.SetActive(true);
+        go.GetComponent<SpriteRenderer>().color = accent;
+        markers.Add(new Marker { index = nextIndex, land = nextLand, beats = e.beats, go = go });
+        nextLand += e.beats;                                       // the next bar line
+        nextIndex++;
+    }
+
+    void Judge(List<PlayerVoice> players)
+    {
+        var m = Current;
+        var e = Entry(m.index);
+        float landTime = Time.time - (songBeat - m.land) * BeatSeconds;   // strikes are stamped in seconds
+        var struck = players.Where(p => p.lastStrikeTime >= landTime - earlyBeats * BeatSeconds).ToList();
+        bool right = struck.Count == 3 && new HashSet<int>(struck.Select(p => p.lastStrikeMidi % 12)).SetEquals(Chord.Tones(e.root, e.quality));
+        if (right) Finish(m, true, null);
+        else if (songBeat > m.land + lateBeats)
+            Finish(m, false, struck.Count == 0 ? "nobody struck" : struck.Count < 3 ? (3 - struck.Count) + " didn't strike in time" : "wrong notes");
+    }
+
+    void Finish(Marker m, bool hit, string why)
+    {
+        var e = Entry(m.index);
+        if (hit)
+        {
+            combo++;
+            int pts = 100 + 20 * Mathf.Min(combo - 1, 10);
+            score += pts;
+            Say(Chord.Label(e.root, e.quality) + "  +" + pts + (combo > 1 ? "   combo x" + combo : ""), 3f);
+        }
+        else
+        {
+            combo = 0; lives--;
+            Say("missed " + Chord.Label(e.root, e.quality) + ": " + why, 3f);
+        }
+        Destroy(m.go);
+        markers.Remove(m);
+        if (lives <= 0)
+        {
+            gameOver = true;
+            ClearMarkers();
+            Say("GAME OVER   team " + score + "   Options restarts", float.MaxValue);
+        }
+    }
+
+    void Say(string text, float seconds) { bannerLabel.text = text; bannerUntil = Time.time + seconds; }
+
+    void ClearMarkers()
+    {
+        foreach (var m in markers) Destroy(m.go);
+        markers.Clear();
+    }
+
+    void StartClock()
+    {
+        ClearMarkers();
+        nextIndex = 0;
+        nextLand = 0f;                       // first chord lands on beat 0
+        songBeat = -2f * CountInBeats;       // one counted bar, then the first ring closes over one bar
+        lastBeatInt = -99;
+    }
+
+    public void ChangeSong(int step)
+    {
+        songIndex = ((songIndex + step) % songs.Length + songs.Length) % songs.Length;
+        song = songs[songIndex];
+        Restart();
+        Say(song.name + "   " + song.meter, 2f);
+    }
+
+    public void Restart()
+    {
+        score = 0; lives = 5; combo = 0; gameOver = false;
+        bannerLabel.text = "";
+        StartClock();
+    }
+}

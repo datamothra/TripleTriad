@@ -1,0 +1,13 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+[CreateAssetMenu(menuName = "Triad/Song")]
+public class Song : ScriptableObject
+{
+    [System.Serializable]
+    public class Entry { public Chord.Note root; public Chord.Quality quality = Chord.Quality.Major; public float beats = 2; }
+
+    public string meter = "4/4";          // for the title line; the beats field on each chord is what actually schedules
+    public float bpm = 66;                 // beats per minute, where a beat is the meter's pulse (dotted quarter in 6/8)
+    public List<Entry> entries = new List<Entry>();
+}
