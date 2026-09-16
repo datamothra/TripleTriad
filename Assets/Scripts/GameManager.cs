@@ -8,9 +8,9 @@ public class GameManager : MonoBehaviour
     public Song[] songs;
     public PlayerInputManager playerManager;   
     public Triad.Synth synth;
-    public RingMesh ring;
+    public Ring ring;
     public Transform ringTemplate;        
-    public Transform coreLine;
+    public SpriteRenderer coreLine;
     public ChordTriangle triangle;
     public TMP_Text chordLabel, chordNotes, titleLabel, scoreLabel, bannerLabel, speedLabel;
     public Color accent = new Color(0.875f, 0.686f, 0.196f);
@@ -34,12 +34,20 @@ public class GameManager : MonoBehaviour
     int nextIndex, score, lives, combo, lastPlayerCount, lastBeatInt;
     float songBeat, nextLand, beatPulse, bannerUntil;
     bool gameOver;
+    Color coreColour;                     // the red line's colour as set in the Inspector; only its alpha pulses
 
     public void SetSpeed(float s) { speed = s; }              // the UI Slider calls this, but i dont htink i set it up right lol
     public static Vector3 Polar(float r, int pitchClass)
     {
         float a = (90f - pitchClass * 30f) * Mathf.Deg2Rad;      // C at the top, clockwise
         return new Vector3(Mathf.Cos(a) * r, Mathf.Sin(a) * r, 0f);
+    }
+
+    // inverse of Polar: which of the twelve wedges a world position is in
+    public static int WedgeAt(Vector2 p)
+    {
+        float a = Mathf.Atan2(p.y, p.x) * Mathf.Rad2Deg;
+        return (Mathf.RoundToInt((90f - a) / 30f) % 12 + 12) % 12;
     }
 
     float Bpm => song.bpm * speed;
@@ -51,12 +59,11 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         song = songs[0];
-        playerManager.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;   // the join events below only fire in this mode
-        playerManager.onPlayerJoined += OnPlayerJoined;
+        playerManager.onPlayerJoined += OnPlayerJoined;              // PlayerManager is set to Invoke CSharp Events in the scene, or these never fire
         playerManager.onPlayerLeft += OnPlayerLeft;
     }
 
-    void Start() { Restart(); }
+    void Start() { coreColour = coreLine.color; Restart(); }
 
     void OnPlayerJoined(PlayerInput input)
     {
@@ -122,8 +129,8 @@ public class GameManager : MonoBehaviour
         chordLabel.color = accent;
 
         // the red line is the metronome
-        coreLine.localScale = Vector3.one * (landScale + 0.22f * beatPulse);
-        if (coreLine.TryGetComponent<SpriteRenderer>(out var coreSr)) coreSr.color = new Color(0.784f, 0.294f, 0.294f, 0.7f + 0.3f * beatPulse);
+        coreLine.transform.localScale = Vector3.one * (landScale + 0.22f * beatPulse);
+        coreLine.color = new Color(coreColour.r, coreColour.g, coreColour.b, coreColour.a * (0.7f + 0.3f * beatPulse));
 
         int shown = cur != null ? cur.index : nextIndex;
         titleLabel.text = song.name + "   " + song.meter + "   " + Bpm.ToString("0") + " bpm   chord " + (shown % song.entries.Count + 1) + " of " + song.entries.Count + "     L1 / R1 change song   Options restart";

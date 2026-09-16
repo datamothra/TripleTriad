@@ -1,3 +1,4 @@
+using System.Linq;
 using TMPro;
 using UnityEditor;
 using UnityEditor.Events;
@@ -8,7 +9,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
-/// Menu: Triad → Build Scene. Creates the song asset, the Player prefab, and a scene with everything wired.
+// Triad → Build Scene: creates the song assets, the Player prefab, and a scene with everything wired
 public static class TriadSetup
 {
     static readonly Color Accent = new Color(0.875f, 0.686f, 0.196f);
@@ -27,10 +28,11 @@ public static class TriadSetup
         }
         var circle = ImportSprite("Assets/Sprites/circle.png", 512);
         var ring = ImportSprite("Assets/Sprites/ring.png", 512);
+        var wedge = WedgeSprite();
         var actions = AssetDatabase.LoadAssetAtPath<InputActionAsset>("Assets/Input/TriadControls.inputactions");
-        if (circle == null || ring == null || actions == null)
+        if (circle == null || ring == null || wedge == null || actions == null)
         {
-            Debug.LogError("Triad: missing circle.png, ring.png or TriadControls.inputactions under Assets.");
+            Debug.LogError("Triad: missing circle.png, ring.png, wedge.png or TriadControls.inputactions under Assets.");
             return;
         }
 
@@ -46,8 +48,8 @@ public static class TriadSetup
         cam.clearFlags = CameraClearFlags.SolidColor;
         cam.backgroundColor = new Color(0.05f, 0.05f, 0.08f);
 
-        // the ring and the red deadline
-        var ringMesh = new GameObject("Ring").AddComponent<RingMesh>();
+        // the note ring (twelve wedge sprites) and the red deadline
+        var noteRing = MakeRing(new GameObject("Ring"), wedge);
         var coreLine = MakeSprite("CoreLine", circle, Vector3.zero, 3.5f, new Color(0.784f, 0.294f, 0.294f), 5);
         MakeSprite("Core", circle, Vector3.zero, 3.35f, Ink, 6);
         var letters = new GameObject("Letters");
@@ -61,8 +63,8 @@ public static class TriadSetup
         var label = MakeText("ChordLabel", new Vector3(0, 0.22f, 0), "", 8, Color.white, 50, true);
         var notes = MakeText("ChordNotes", new Vector3(0, -0.35f, 0), "", 3.4f, new Color(1, 1, 1, 0.6f), 50);
         manager.songs = songs;
-        manager.ring = ringMesh;
-        manager.coreLine = coreLine.transform;
+        manager.ring = noteRing;
+        manager.coreLine = coreLine;
         manager.chordNotes = notes;
         manager.ringTemplate = approach.transform;
         manager.chordLabel = label;
@@ -130,7 +132,45 @@ public static class TriadSetup
         Debug.Log("Triad: scene built and saved as Assets/Scenes/Triad.unity. Press Play, then Cross on each of the three controllers to join.");
     }
 
+    // Triad → Rebuild Ring: remakes just the ring's twelve wedge objects in the open scene
+    [MenuItem("Triad/Rebuild Ring")]
+    public static void RebuildRing()
+    {
+        var wedge = WedgeSprite();
+        if (wedge == null) { Debug.LogError("Triad: no sprite found in Assets/Sprites/wedge.png."); return; }
+        var root = GameObject.Find("Ring") ?? new GameObject("Ring");
+        Undo.RegisterFullObjectHierarchyUndo(root, "Rebuild Ring");
+        var ring = MakeRing(root, wedge);
+        var manager = Object.FindAnyObjectByType<GameManager>();
+        if (manager != null) { manager.ring = ring; EditorUtility.SetDirty(manager); }
+        EditorSceneManager.MarkSceneDirty(root.scene);
+        Debug.Log("Triad: ring rebuilt from twelve wedge sprites under " + root.name + ".");
+    }
+
     // ---- pieces -----------------------------------------------------------------------------
+
+    const float WedgeInnerRadius = 1.72f;   // wedge_0's pivot sits on its inner arc, this far from the ring's centre (343 px at 200 px/unit)
+    static readonly Color WedgeEven = new Color(0.10f, 0.10f, 0.13f), WedgeOdd = new Color(0.13f, 0.13f, 0.17f);
+
+    // one sprite object per note under root, C at the top then clockwise, inner arc facing the centre
+    static Ring MakeRing(GameObject root, Sprite wedge)
+    {
+        for (int i = root.transform.childCount - 1; i >= 0; i--) Object.DestroyImmediate(root.transform.GetChild(i).gameObject);
+        foreach (var c in root.GetComponents<Component>())
+            if (!(c is Transform) && !(c is Ring)) Object.DestroyImmediate(c);      // the old procedural mesh, if any
+        var ring = root.GetComponent<Ring>() ?? root.AddComponent<Ring>();
+        for (int i = 0; i < 12; i++)
+        {
+            var sr = MakeSprite("Wedge " + Chord.Names[i], wedge, GameManager.Polar(WedgeInnerRadius, i), 1f, i % 2 == 0 ? WedgeEven : WedgeOdd, 0);
+            sr.transform.rotation = Quaternion.Euler(0, 0, -30f * i);   // full 30 degrees each, no gaps: every angle is a note
+            sr.transform.SetParent(root.transform, true);
+        }
+        return ring;
+    }
+
+    // wedge.png was sliced and pivoted by hand in the Sprite Editor, so load it as-is instead of reimporting
+    static Sprite WedgeSprite() =>
+        AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/Sprites/wedge.png").OfType<Sprite>().FirstOrDefault();
 
     static Song MakeSong(string file, string title, string meter, float bpm, float beatsPerChord, string chart)
     {
@@ -151,8 +191,8 @@ public static class TriadSetup
         return song;
     }
 
-    /// Three public-domain charts, each in its own meter. One chord symbol per bar of the chart
-    /// unless the harmonic rhythm is faster (the Canon changes every half note).
+    // three public-domain charts, each in its own meter: one chord symbol per bar
+    // unless the harmonic rhythm is faster (the Canon changes every half note)
     static Song[] MakeSongs() => new[]
     {
         // 6/8 counted in three: each bar is three pulses (117 of them a minute keeps the bar at 78 dotted quarters).

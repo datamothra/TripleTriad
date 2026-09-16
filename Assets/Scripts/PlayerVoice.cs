@@ -48,7 +48,7 @@ public class PlayerVoice : MonoBehaviour
         var p = (Vector2)transform.position;                     // keep them in the running band
         float r = p.magnitude;
         if (r > 0.01f) transform.position = p / r * Mathf.Clamp(r, innerRadius, outerRadius);
-        wedge = RingMesh.WedgeAt(transform.position);            // angle = wedge = note
+        wedge = GameManager.WedgeAt(transform.position);         // angle = wedge = note
         if (noteLabel != null) noteLabel.text = Chord.Names[wedge];
     }
 }
