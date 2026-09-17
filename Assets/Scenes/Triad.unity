@@ -2375,6 +2375,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee86113fc42d242be99bb4f33127d7dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Ring
+  shiftSeconds: 0.15
+  shiftAmount: 120
 --- !u!4 &735192209
 Transform:
   m_ObjectHideFlags: 0
@@ -2388,6 +2390,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1629262314}
   - {fileID: 1638815830}
   - {fileID: 2109438061}
   - {fileID: 29677240}
@@ -2907,9 +2910,15 @@ MonoBehaviour:
   accent: {r: 0.875, g: 0.686, b: 0.196, a: 1}
   earlyBeats: 0.5
   lateBeats: 0.25
+  shiftEvery: 2
+  shiftWedges: 1
+  missColour: {r: 0.9, g: 0.1, b: 0.15, a: 1}
+  missSeconds: 0.6
+  missShake: 0.35
+  shakeCamera: {fileID: 0}
   spawnScale: 24
   landScale: 3.5
-  speed: 1
+  speed: 0.76
 --- !u!4 &1060368624
 Transform:
   m_ObjectHideFlags: 0
@@ -4209,7 +4218,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1199312eca11e409ebd5935d27299241, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Triad.Synth
-  noteSeconds: 0.5
+  noteSeconds: 3
 --- !u!4 &1492246266
 Transform:
   m_ObjectHideFlags: 0
@@ -4433,7 +4442,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1629262313}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -4450,7 +4459,7 @@ Transform:
   - {fileID: 386456110}
   - {fileID: 933030065}
   - {fileID: 410287335}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 735192209}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1638815829
 GameObject:
@@ -5193,7 +5202,6 @@ SceneRoots:
   - {fileID: 735192209}
   - {fileID: 2054193210}
   - {fileID: 1968502234}
-  - {fileID: 1629262314}
   - {fileID: 1060368624}
   - {fileID: 390533129}
   - {fileID: 1100419295}

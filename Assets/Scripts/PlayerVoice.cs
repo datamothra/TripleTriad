@@ -15,6 +15,12 @@ public class PlayerVoice : MonoBehaviour
     public float lastStrikeTime = -99f;
     public int lastStrikeMidi;
 
+    public float coolDownTime = 0.06f;
+
+    public SpriteRenderer pad;
+
+    public Color[] colours = { Color.cyan, Color.magenta, Color.yellow };   // one per player, in join order
+
     const int OctaveMidi = 60;       
     Vector2 move;
 
@@ -23,9 +29,11 @@ public class PlayerVoice : MonoBehaviour
     void Awake()
     {
         voice = GetComponent<PlayerInput>().playerIndex;         // 0, 1, 2 in join order
+        if (pad != null && colours.Length > 0) pad.color = colours[voice % colours.Length];
         wedge = new[] { 0, 4, 7 }[voice % 3];                    // spawn on C, E, G
         transform.position = GameManager.Polar(3.4f, wedge);
-        if (tagLabel != null) tagLabel.text = "P" + (voice + 1);
+        if (noteLabel != null) noteLabel.text = "P" + (voice + 1);   // the label on the pad is who you are, it never changes
+
     }
 
     // Player controller stuff
@@ -36,7 +44,7 @@ public class PlayerVoice : MonoBehaviour
 
     void OnStrike(InputValue v)
     {
-        if (!v.isPressed || Time.time - lastStrikeTime < 0.06f) return;          // 
+        if (!v.isPressed || Time.time - lastStrikeTime < coolDownTime) return;          // 
         if (synth != null) synth.Strike(voice, Midi, 0.85f);                       // monophonic
         lastStrikeTime = Time.time;
         lastStrikeMidi = Midi;
@@ -48,7 +56,6 @@ public class PlayerVoice : MonoBehaviour
         var p = (Vector2)transform.position;                     // keep them in the running band
         float r = p.magnitude;
         if (r > 0.01f) transform.position = p / r * Mathf.Clamp(r, innerRadius, outerRadius);
-        wedge = GameManager.WedgeAt(transform.position);         // angle = wedge = note
-        if (noteLabel != null) noteLabel.text = Chord.Names[wedge];
+        wedge = game != null ? game.ring.WedgeAt(transform.position) : GameManager.WedgeAt(transform.position);   // angle on the ring = wedge = note
     }
 }

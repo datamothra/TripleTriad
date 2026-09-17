@@ -14,11 +14,21 @@ public class GameManager : MonoBehaviour
     public TMP_Text chordLabel, chordNotes, titleLabel, scoreLabel, bannerLabel, speedLabel;
     public Color accent = new Color(0.875f, 0.686f, 0.196f);
 
+   
 
 
 // leniency on timing
     public float earlyBeats = 0.5f;       
     public float lateBeats = 0.25f;      
+
+    public int shiftEvery = 2;            // the ring turns after this many chords, 0 = never
+    public int shiftWedges = 1;           // by this many wedges, + is clockwise
+
+    // a miss: the whole ring and the banner flash this colour, the camera shakes, the synth thuds
+    public Color missColour = new Color(0.9f, 0.1f, 0.15f);
+    public float missSeconds = 0.6f;
+    public float missShake = 0.35f;
+    public Transform shakeCamera;         // drag Main Camera here, empty = no shake
 
 
 
@@ -30,9 +40,11 @@ public class GameManager : MonoBehaviour
     readonly List<PlayerVoice> players = new List<PlayerVoice>();
     public List<PlayerVoice> Players => players;
     Song song; int songIndex;
-    int nextIndex, score, lives, combo, lastPlayerCount, lastBeatInt;
-    float songBeat, nextLand, beatPulse, bannerUntil;
+    int nextIndex, score, lives, combo, lastPlayerCount, lastBeatInt, chordsDone;
+    float songBeat, nextLand, beatPulse, bannerUntil, missFlash;
+    Vector3 cameraHome;
     bool gameOver;
+    Color bannerColour;                   // the banner's colour as set in the Inspector, a miss turns it red for a moment
     Color coreColour;                     // the red line's colour as set in the Inspector; only its alpha pulses
 
     public static Vector3 Polar(float r, int pitchClass)
@@ -59,7 +71,13 @@ public class GameManager : MonoBehaviour
         song = songs[0];
     }
 
-    void Start() { coreColour = coreLine.color; Restart(); }
+    void Start()
+    {
+        coreColour = coreLine.color;
+        bannerColour = bannerLabel.color;
+        if (shakeCamera != null) cameraHome = shakeCamera.position;
+        Restart();
+    }
 
     // the PlayerInputManager on this same object sends these by name (Send Messages), like the players' actions
     void OnPlayerJoined(PlayerInput input)
@@ -68,6 +86,7 @@ public class GameManager : MonoBehaviour
         voice.game = this;
         voice.synth = synth;
         players.Add(voice);
+        
     }
 
     void OnPlayerLeft(PlayerInput input) { players.Remove(input.GetComponent<PlayerVoice>()); }
@@ -108,6 +127,13 @@ public class GameManager : MonoBehaviour
             ring.Tint(tones[2], new Color(accent.r, accent.g, accent.b, 0.45f));
         }
         foreach (var p in players) ring.Tint(p.wedge, new Color(1, 1, 1, 0.25f));
+
+        // a miss washes over everything and fades out
+        missFlash = Mathf.Max(0f, missFlash - dt / missSeconds);
+        if (missFlash > 0f)
+            for (int w = 0; w < 12; w++) ring.Tint(w, new Color(missColour.r, missColour.g, missColour.b, 0.85f * missFlash));
+        bannerLabel.color = Color.Lerp(bannerColour, missColour, missFlash);
+        if (shakeCamera != null) shakeCamera.position = cameraHome + (Vector3)(Random.insideUnitCircle * missShake * missFlash);
         triangle.inPosition = tones != null && players.Count == 3 && new HashSet<int>(players.Select(p => p.wedge)).SetEquals(tones);
 
         // core: the count-in, then the chord that is coming
@@ -173,10 +199,13 @@ public class GameManager : MonoBehaviour
         else
         {
             combo = 0; lives--;
+            missFlash = 1f;
+            for (int v = 0; v < 3; v++) synth.Strike(v, 43 + v, 1f);      // three low notes a semitone apart, an ugly thud
             Say("missed " + Chord.Label(e.root, e.quality) + ": " + why, 3f);
         }
         Destroy(m.go);
         markers.Remove(m);
+        if (shiftEvery > 0 && ++chordsDone % shiftEvery == 0) ring.Shift(shiftWedges);
         if (lives <= 0)
         {
             gameOver = true;
@@ -196,6 +225,8 @@ public class GameManager : MonoBehaviour
     void StartClock()
     {
         ClearMarkers();
+        chordsDone = 0;
+        ring.ResetShift();
         nextIndex = 0;
         nextLand = 0f;                       // first chord lands on beat 0
         songBeat = -2f * CountInBeats;       // one counted bar, then the first ring closes over one bar
