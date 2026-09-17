@@ -7,10 +7,9 @@ public class Ring : MonoBehaviour
     readonly SpriteRenderer[] wedges = new SpriteRenderer[12];
     readonly Color[] rest = new Color[12];
 
-    public float shiftSeconds = 0.25f;    // how long one wedge of turn takes
+    public float shiftSpeed = 0.15f;      // seconds a shift takes, the same however far it turns
 
-    public float shiftAmount = 30f;
-    float targetZ;                        // where the ring is turning to; it sits still once it gets there
+    float z, fromZ, targetZ, shiftStart;  // the ring's angle now, where this shift began, where it ends, when it began
 
     void Awake()
     {
@@ -23,12 +22,13 @@ public class Ring : MonoBehaviour
     }
 
     // turn by whole wedges, + is clockwise like the notes
-    public void Shift(int steps) { targetZ -= shiftAmount * steps; }
-    public void ResetShift() { targetZ = 0f; transform.rotation = Quaternion.identity; }
+    public void Shift(int steps) { fromZ = z; targetZ -= 30f * steps; shiftStart = Time.time; }
+    public void ResetShift() { z = fromZ = targetZ = 0f; transform.rotation = Quaternion.identity; }
 
     void Update()
     {
-        float z = Mathf.MoveTowardsAngle(transform.eulerAngles.z, targetZ, 30f / shiftSeconds * Time.deltaTime);
+        float t = shiftSpeed > 0f ? Mathf.Clamp01((Time.time - shiftStart) / shiftSpeed) : 1f;
+        z = Mathf.Lerp(fromZ, targetZ, Mathf.SmoothStep(0f, 1f, t));      // eases in and out
         transform.rotation = Quaternion.Euler(0f, 0f, z);
     }
 

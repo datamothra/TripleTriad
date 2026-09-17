@@ -2375,7 +2375,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee86113fc42d242be99bb4f33127d7dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Ring
-  shiftSeconds: 0.15
+  shiftSpeed: 0.15
   shiftAmount: 120
 --- !u!4 &735192209
 Transform:

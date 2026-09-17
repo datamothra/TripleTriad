@@ -22,7 +22,8 @@ public class GameManager : MonoBehaviour
     public float lateBeats = 0.25f;      
 
     public int shiftEvery = 2;            // the ring turns after this many chords, 0 = never
-    public int shiftWedges = 1;           // by this many wedges, + is clockwise
+    public int shiftMinWedges = 1, shiftMaxWedges = 5;   // by a random number of wedges in this range
+    public bool shiftEitherWay = true;    // off = always clockwise
 
     // a miss: the whole ring and the banner flash this colour, the camera shakes, the synth thuds
     public Color missColour = new Color(0.9f, 0.1f, 0.15f);
@@ -205,7 +206,7 @@ public class GameManager : MonoBehaviour
         }
         Destroy(m.go);
         markers.Remove(m);
-        if (shiftEvery > 0 && ++chordsDone % shiftEvery == 0) ring.Shift(shiftWedges);
+        if (shiftEvery > 0 && ++chordsDone % shiftEvery == 0) ring.Shift(Random.Range(shiftMinWedges, shiftMaxWedges + 1) * (shiftEitherWay && Random.value < 0.5f ? -1 : 1));
         if (lives <= 0)
         {
             gameOver = true;
