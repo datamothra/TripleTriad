@@ -1,0 +1,2 @@
+# TextMesh Pro is a Unity package copied into Assets; keep its shaders out of the GitHub language stats
+"Assets/TextMesh Pro/**" linguist-vendored

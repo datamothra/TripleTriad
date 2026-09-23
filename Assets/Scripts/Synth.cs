@@ -24,6 +24,7 @@ namespace Triad
         readonly float sampleRate, fastK, hammerK;
         uint noise = 0x12345678; //exciter
 
+        public float volume = 0.9f;
         public float noteSeconds = 0.5f;    // full decay time, weird and linear but whatever ill fix later, fast gets multiplied into this
 
         public PianoEngine(float sampleRate)
@@ -90,7 +91,7 @@ namespace Triad
                     s += sum * (0.45f + 0.55f * fast[i]) * attack * vel[i] * 0.7f;
                     if (total < 0.0008f) active[i] = false;
                 }
-                s *= 0.9f;
+                s *= volume;
                 s = s / (1f + Mathf.Abs(s) * 0.5f);   // gentle soft clip
                 for (int c = 0; c < channels; c++) data[fi * channels + c] = s;
             }
@@ -101,6 +102,7 @@ namespace Triad
     public class Synth : MonoBehaviour
     {
         [Tooltip("Seconds from strike to silence.")] public float noteSeconds = 0.5f;
+        [Tooltip("Master output level.")] public float volume = 0.9f;
         PianoEngine engine;
 
         void Awake()
@@ -116,6 +118,7 @@ namespace Triad
         public void Strike(int voice, int midi, float velocity)
         {
             engine.noteSeconds = noteSeconds;
+            engine.volume = volume;
             engine.Strike(voice, 440f * Mathf.Pow(2f, (midi - 69) / 12f), velocity);
         }
 

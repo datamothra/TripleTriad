@@ -6,6 +6,7 @@ public class ChordTriangle : MonoBehaviour
 {
     public Color idle = new Color(1, 1, 1, 0.2f);
     public Color lit = new Color(0.875f, 0.686f, 0.196f);
+    public float idleWidth = 0.07f, litWidth = 0.12f;
     public GameManager game;
     [HideInInspector] public bool inPosition;
     LineRenderer line;
@@ -18,6 +19,6 @@ public class ChordTriangle : MonoBehaviour
         line.positionCount = players.Count;
         for (int i = 0; i < players.Count; i++) line.SetPosition(i, players[i].transform.position);
         line.startColor = line.endColor = inPosition ? lit : idle;
-        line.startWidth = line.endWidth = inPosition ? 0.12f : 0.07f;
+        line.startWidth = line.endWidth = inPosition ? litWidth : idleWidth;
     }
 }

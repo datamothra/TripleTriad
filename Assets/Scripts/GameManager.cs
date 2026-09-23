@@ -14,27 +14,50 @@ public class GameManager : MonoBehaviour
     public TMP_Text chordLabel, chordNotes, titleLabel, scoreLabel, bannerLabel, speedLabel;
     public Color accent = new Color(0.875f, 0.686f, 0.196f);
 
-   
+    [Header("Tempo")]
+    [Range(0.4f, 2.5f)] public float speed = 1f;   // multiplies the song's bpm, set in the Inspector before pressing Play
 
+    [Header("Timing window (in beats)")]
+    public float earlyBeats = 0.5f;       // a strike this many beats before the downbeat still counts
+    public float lateBeats = 0.25f;       // the chord is missed once this many beats have passed without it
 
-// leniency on timing
-    public float earlyBeats = 0.5f;       
-    public float lateBeats = 0.25f;      
-
+    [Header("Ring turning")]
     public int shiftEvery = 2;            // the ring turns after this many chords, 0 = never
     public int shiftMinWedges = 1, shiftMaxWedges = 5;   // by a random number of wedges in this range
     public bool shiftEitherWay = true;    // off = always clockwise
 
+    [Header("Scoring")]
+    public int startLives = 5;
+    public int chordPoints = 100;         // for every chord hit
+    public int comboBonus = 20;           // extra per combo step
+    public int comboCap = 10;             // combo steps that still add bonus
+
+    [Header("Approach circle")]
+    public float spawnScale = 24f, landScale = 3.5f;   // size when it appears, size on the red line
+    public float approachChords = 1f;     // it appears this many of its own chord lengths before landing
+
+    [Header("Wedge highlights (alpha)")]
+    public float rootTint = 0.70f;
+    public float toneTint = 0.45f;        // third and fifth
+    public float playerTint = 0.25f;      // the wedge a player stands in
+
+    [Header("Beat pulse")]
+    public float pulseDecay = 5f;         // how fast the pulse fades after each beat
+    public float pulseGrow = 0.22f;       // how much the red line swells on the beat
+    public float pulseDimAlpha = 0.7f;    // the red line's alpha between beats, 1 on the beat
+
     // a miss: the whole ring and the banner flash this colour, the camera shakes, the synth thuds
+    [Header("Miss")]
     public Color missColour = new Color(0.9f, 0.1f, 0.15f);
     public float missSeconds = 0.6f;
+    public float missTint = 0.85f;        // how strongly the ring turns missColour
     public float missShake = 0.35f;
     public Transform shakeCamera;         // drag Main Camera here, empty = no shake
+    public int missThudMidi = 43;         // lowest of the three thud notes, a semitone apart
+    public float missThudVelocity = 1f;
 
-
-
-    public float spawnScale = 24f, landScale = 3.5f;
-    [Range(0.4f, 2.5f)] public float speed = 1f;   // set in the Inspector before pressing Play
+    [Header("Banner")]
+    public float hitMessageSeconds = 3f, missMessageSeconds = 3f, songMessageSeconds = 2f;
 
     class Marker { public int index; public float land, beats; public GameObject go; }
     readonly List<Marker> markers = new List<Marker>();
@@ -109,12 +132,12 @@ public class GameManager : MonoBehaviour
             int beat = Mathf.FloorToInt(songBeat);
             if (beat != lastBeatInt) { lastBeatInt = beat; beatPulse = 1f; }
 
-            while (songBeat >= nextLand - Entry(nextIndex).beats) Spawn();     // a ring appears one chord-length before its bar line
+            while (songBeat >= nextLand - Entry(nextIndex).beats * approachChords) Spawn();     // a ring appears approachChords chord-lengths before its bar line
             foreach (var m in markers)
-                m.go.transform.localScale = Vector3.one * Mathf.LerpUnclamped(landScale, spawnScale, (m.land - songBeat) / m.beats);
+                m.go.transform.localScale = Vector3.one * Mathf.LerpUnclamped(landScale, spawnScale, (m.land - songBeat) / (m.beats * approachChords));
             if (Current != null && songBeat >= Current.land) Judge(players);
         }
-        beatPulse = Mathf.Max(0f, beatPulse - dt * 5f);
+        beatPulse = Mathf.Max(0f, beatPulse - dt * pulseDecay);
         lastPlayerCount = players.Count;
 
         // wedges: the chord's three notes light up (root strongest), players lighten the one they stand in
@@ -123,16 +146,16 @@ public class GameManager : MonoBehaviour
         int[] tones = cur != null ? Chord.Tones(Entry(cur.index).root, Entry(cur.index).quality) : null;
         if (tones != null)
         {
-            ring.Tint(tones[0], new Color(accent.r, accent.g, accent.b, 0.70f));
-            ring.Tint(tones[1], new Color(accent.r, accent.g, accent.b, 0.45f));
-            ring.Tint(tones[2], new Color(accent.r, accent.g, accent.b, 0.45f));
+            ring.Tint(tones[0], new Color(accent.r, accent.g, accent.b, rootTint));
+            ring.Tint(tones[1], new Color(accent.r, accent.g, accent.b, toneTint));
+            ring.Tint(tones[2], new Color(accent.r, accent.g, accent.b, toneTint));
         }
-        foreach (var p in players) ring.Tint(p.wedge, new Color(1, 1, 1, 0.25f));
+        foreach (var p in players) ring.Tint(p.wedge, new Color(1, 1, 1, playerTint));
 
         // a miss washes over everything and fades out
         missFlash = Mathf.Max(0f, missFlash - dt / missSeconds);
         if (missFlash > 0f)
-            for (int w = 0; w < 12; w++) ring.Tint(w, new Color(missColour.r, missColour.g, missColour.b, 0.85f * missFlash));
+            for (int w = 0; w < 12; w++) ring.Tint(w, new Color(missColour.r, missColour.g, missColour.b, missTint * missFlash));
         bannerLabel.color = Color.Lerp(bannerColour, missColour, missFlash);
         if (shakeCamera != null) shakeCamera.position = cameraHome + (Vector3)(Random.insideUnitCircle * missShake * missFlash);
         triangle.inPosition = tones != null && players.Count == 3 && new HashSet<int>(players.Select(p => p.wedge)).SetEquals(tones);
@@ -153,8 +176,8 @@ public class GameManager : MonoBehaviour
         chordLabel.color = accent;
 
         // the red line is the metronome
-        coreLine.transform.localScale = Vector3.one * (landScale + 0.22f * beatPulse);
-        coreLine.color = new Color(coreColour.r, coreColour.g, coreColour.b, coreColour.a * (0.7f + 0.3f * beatPulse));
+        coreLine.transform.localScale = Vector3.one * (landScale + pulseGrow * beatPulse);
+        coreLine.color = new Color(coreColour.r, coreColour.g, coreColour.b, coreColour.a * Mathf.Lerp(pulseDimAlpha, 1f, beatPulse));
 
         int shown = cur != null ? cur.index : nextIndex;
         titleLabel.text = song.name + "   " + song.meter + "   " + Bpm.ToString("0") + " bpm   chord " + (shown % song.entries.Count + 1) + " of " + song.entries.Count + "     L1 / R1 change song   Options restart";
@@ -193,16 +216,16 @@ public class GameManager : MonoBehaviour
         if (hit)
         {
             combo++;
-            int pts = 100 + 20 * Mathf.Min(combo - 1, 10);
+            int pts = chordPoints + comboBonus * Mathf.Min(combo - 1, comboCap);
             score += pts;
-            Say(Chord.Label(e.root, e.quality) + "  +" + pts + (combo > 1 ? "   combo x" + combo : ""), 3f);
+            Say(Chord.Label(e.root, e.quality) + "  +" + pts + (combo > 1 ? "   combo x" + combo : ""), hitMessageSeconds);
         }
         else
         {
             combo = 0; lives--;
             missFlash = 1f;
-            for (int v = 0; v < 3; v++) synth.Strike(v, 43 + v, 1f);      // three low notes a semitone apart, an ugly thud
-            Say("missed " + Chord.Label(e.root, e.quality) + ": " + why, 3f);
+            for (int v = 0; v < 3; v++) synth.Strike(v, missThudMidi + v, missThudVelocity);      // three low notes a semitone apart, an ugly thud
+            Say("missed " + Chord.Label(e.root, e.quality) + ": " + why, missMessageSeconds);
         }
         Destroy(m.go);
         markers.Remove(m);
@@ -239,12 +262,12 @@ public class GameManager : MonoBehaviour
         songIndex = ((songIndex + step) % songs.Length + songs.Length) % songs.Length;
         song = songs[songIndex];
         Restart();
-        Say(song.name + "   " + song.meter, 2f);
+        Say(song.name + "   " + song.meter, songMessageSeconds);
     }
 
     public void Restart()
     {
-        score = 0; lives = 5; combo = 0; gameOver = false;
+        score = 0; lives = startLives; combo = 0; gameOver = false;
         bannerLabel.text = "";
         StartClock();
     }
