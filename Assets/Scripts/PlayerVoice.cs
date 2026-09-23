@@ -32,7 +32,7 @@ public class PlayerVoice : MonoBehaviour
 
     void Awake()
     {
-        voice = GetComponent<PlayerInput>().playerIndex;         // 0, 1, 2 in join order
+        voice = Mathf.Max(0, GetComponent<PlayerInput>().playerIndex);         // 0, 1, 2 in join order
         if (pad != null && colours.Length > 0) pad.color = colours[voice % colours.Length];
         wedge = spawnWedges.Length > 0 ? spawnWedges[voice % spawnWedges.Length] : 0;
         transform.position = GameManager.Polar(spawnRadius, wedge);
@@ -56,6 +56,7 @@ public class PlayerVoice : MonoBehaviour
 
     void Update()
     {
+        if (game != null && game.canonMusicMode) return; // 音乐模式统一先移动，再读取按键和判定。
         float mult = speedMultipliers.Length > 0 ? speedMultipliers[voice % speedMultipliers.Length] : 1f;
         transform.position += (Vector3)(move * moveSpeed * mult * Time.deltaTime);
         var p = (Vector2)transform.position;                     // keep them in the running band

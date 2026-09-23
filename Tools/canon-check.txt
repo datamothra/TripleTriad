@@ -1,0 +1,2 @@
+HISTORICAL REPORT: previous 36-target version; not a play-mode result for the easy chart.
+PASSED: three simultaneous keyboard movement inputs; Space/Enter/Numpad0 hits; 36 targets; 18 automatic targets without presses; missing press and duplicate pitch rejected; audio/clock agreement within 150ms throughout playback; 30s finish; restart; countdown and mid-song pause/resume.

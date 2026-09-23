@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 public class GameManager : MonoBehaviour
 {
+    public bool canonMusicMode = true;
+    [HideInInspector] public CanonRhythm canon;
     public Song[] songs;
     public Triad.Synth synth;
     public Ring ring;
@@ -92,11 +94,19 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
+        if (canonMusicMode)
+        {
+            var input = GetComponent<PlayerInputManager>();
+            if (input != null) { input.DisableJoining(); input.enabled = false; }
+            canon = gameObject.AddComponent<CanonRhythm>();
+            return;
+        }
         song = songs[0];
     }
 
     void Start()
     {
+        if (canonMusicMode) return;
         coreColour = coreLine.color;
         bannerColour = bannerLabel.color;
         if (shakeCamera != null) cameraHome = shakeCamera.position;
@@ -106,6 +116,7 @@ public class GameManager : MonoBehaviour
     // the PlayerInputManager on this same object sends these by name (Send Messages), like the players' actions
     void OnPlayerJoined(PlayerInput input)
     {
+        if (canonMusicMode) return; // 音乐模式固定三个席位，设备变化不能重复加入。
         var voice = input.GetComponent<PlayerVoice>();
         voice.game = this;
         voice.synth = synth;
@@ -113,10 +124,11 @@ public class GameManager : MonoBehaviour
         
     }
 
-    void OnPlayerLeft(PlayerInput input) { players.Remove(input.GetComponent<PlayerVoice>()); }
+    void OnPlayerLeft(PlayerInput input) { if (!canonMusicMode) players.Remove(input.GetComponent<PlayerVoice>()); }
 
     void Update()
     {
+        if (canonMusicMode) return;
         float dt = Time.deltaTime; //delta time shorthand
 
         bool running = !gameOver && players.Count == 3;
@@ -259,6 +271,7 @@ public class GameManager : MonoBehaviour
 
     public void ChangeSong(int step)
     {
+        if (canonMusicMode) return;
         songIndex = ((songIndex + step) % songs.Length + songs.Length) % songs.Length;
         song = songs[songIndex];
         Restart();
@@ -267,6 +280,7 @@ public class GameManager : MonoBehaviour
 
     public void Restart()
     {
+        if (canonMusicMode) { if (canon != null) canon.Restart(); return; }
         score = 0; lives = startLives; combo = 0; gameOver = false;
         bannerLabel.text = "";
         StartClock();
