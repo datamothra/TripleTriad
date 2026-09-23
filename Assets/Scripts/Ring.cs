@@ -5,7 +5,7 @@ using UnityEngine;
 public class Ring : MonoBehaviour
 {
     readonly SpriteRenderer[] wedges = new SpriteRenderer[12];
-    readonly Color[] rest = new Color[12];
+    readonly Color[] rest = new Color[12]; //color at rest
 
     public float shiftSpeed = 0.15f;      // seconds a shift takes, the same however far it turns
 

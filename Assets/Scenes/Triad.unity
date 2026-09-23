@@ -2376,7 +2376,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Ring
   shiftSpeed: 0.15
-  shiftAmount: 120
 --- !u!4 &735192209
 Transform:
   m_ObjectHideFlags: 0
@@ -2911,14 +2910,16 @@ MonoBehaviour:
   earlyBeats: 0.5
   lateBeats: 0.25
   shiftEvery: 2
-  shiftWedges: 1
+  shiftMinWedges: 1
+  shiftMaxWedges: 5
+  shiftEitherWay: 1
   missColour: {r: 0.9, g: 0.1, b: 0.15, a: 1}
   missSeconds: 0.6
   missShake: 0.35
   shakeCamera: {fileID: 0}
   spawnScale: 24
   landScale: 3.5
-  speed: 0.76
+  speed: 1.55
 --- !u!4 &1060368624
 Transform:
   m_ObjectHideFlags: 0

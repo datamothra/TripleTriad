@@ -8,7 +8,7 @@ public class PlayerVoice : MonoBehaviour
     public TMP_Text noteLabel, tagLabel;
     [HideInInspector] public GameManager game;   
     [HideInInspector] public Triad.Synth synth;
-    public float moveSpeed = 6.5f, innerRadius = 2.15f, outerRadius = 4.55f;
+    public float moveSpeed = 136.5f, innerRadius = 2.15f, outerRadius = 4.55f;
 
     public int wedge;                 // pitch of the wedge 
     public int voice;                 // synth voice = player index
