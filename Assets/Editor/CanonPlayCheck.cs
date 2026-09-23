@@ -108,6 +108,7 @@ public static class CanonPlayCheck
                         // 首个故意不按，第二个三人重复同音，其他和弦模拟真实三键同时按下。
                         if (!note.auto && index == 1) for (int p = 0; p < 3; p++) rhythm.Strike(p, tones[0], rhythm.SongTime);
                         else if (!note.auto && index > 1) InputSystem.QueueStateEvent(Keyboard.current, new KeyboardState(Key.Space, Key.Enter, Key.Numpad0));
+                        else if (note.auto) InputSystem.QueueStateEvent(Keyboard.current, new KeyboardState(Key.LeftShift, Key.RightShift, Key.NumpadPeriod));   // grey: button West
                     }
                     if (rhythm.SongTime > note.time + .18f)
                     {
@@ -133,7 +134,7 @@ public static class CanonPlayCheck
                 Require(rhythm.SongTime < -3.5f, "Paused clock advanced");
                 rhythm.SendMessage("SetPaused", false);
                 Require(rhythm.SongTime < -3.5f, "Resume shifted clock");
-                File.WriteAllText("Tools/canon-check.txt", "PASSED: three simultaneous keyboard movement inputs; Space/Enter/Numpad0 hits; 13 targets; 4 automatic targets without presses; missing press and duplicate pitch rejected; audio/clock agreement within 150ms throughout playback; 30s finish; restart; countdown and mid-song pause/resume.");
+                File.WriteAllText("Tools/canon-check.txt", "PASSED: three simultaneous keyboard movement inputs; Space/Enter/Numpad0 hits; 13 targets; 4 grey targets hit with LShift/RShift/Num . (button West); missing press and duplicate pitch rejected; audio/clock agreement within 150ms throughout playback; 30s finish; restart; countdown and mid-song pause/resume.");
                 Stop();
             }
             else if (phase == 4 && EditorApplication.timeSinceStartup - phaseAt > .3)

@@ -12,7 +12,7 @@ public class CanonRhythm : MonoBehaviour
         public float time;
         public Chord.Note root;
         public Chord.Quality quality;
-        public bool auto;
+        public bool auto;   // grey chord, struck with button West (the name is from when grey chords needed no press)
     }
     [Serializable] public class Chart { public float duration = 30; public Note[] notes; }
     class Target
@@ -122,7 +122,7 @@ public class CanonRhythm : MonoBehaviour
         game.scoreLabel.rectTransform.anchoredPosition = new Vector2(-24, -90);
         game.speedLabel.rectTransform.sizeDelta = new Vector2(650, 22);
         game.speedLabel.fontSize = 13;
-        game.bannerLabel.text = "F1 / controller Start: play   |   Gold: press   |   Grey: stand in the notes";
+        game.bannerLabel.text = "F1 / controller Start: play   |   Gold: Cross / A   |   Grey: Square / X";
         UpdateHud();
     }
 
@@ -176,9 +176,7 @@ public class CanonRhythm : MonoBehaviour
                 float remaining = Mathf.Clamp01((t.note.time - now) / Approach);
                 float radius = Mathf.Lerp(1.75f, 8, remaining);
                 t.visual.transform.localScale = Vector3.one * radius;
-                if (t.note.auto && now >= t.note.time)
-                    Finish(t, InPosition(t.note), "AUTO");
-                else if (!t.note.auto && now >= t.note.time - Good)
+                if (now >= t.note.time - Good)
                 {
                     if (AllPressed(t))
                     {
@@ -205,7 +203,7 @@ public class CanonRhythm : MonoBehaviour
     {
         var k = Keyboard.current;
         Vector2 move = Vector2.zero;
-        bool strike = false;
+        bool strike = false, west = false;
         if (k != null)
         {
             Key up = i == 0 ? Key.W : i == 1 ? Key.UpArrow : Key.Numpad5;
@@ -213,14 +211,17 @@ public class CanonRhythm : MonoBehaviour
             Key down = i == 0 ? Key.S : i == 1 ? Key.DownArrow : Key.Numpad2;
             Key right = i == 0 ? Key.D : i == 1 ? Key.RightArrow : Key.Numpad3;
             Key hit = i == 0 ? Key.Space : i == 1 ? Key.Enter : Key.Numpad0;
+            Key hitWest = i == 0 ? Key.LeftShift : i == 1 ? Key.RightShift : Key.NumpadPeriod;   // grey chords
             move = new Vector2((k[right].isPressed ? 1 : 0) - (k[left].isPressed ? 1 : 0),
                 (k[up].isPressed ? 1 : 0) - (k[down].isPressed ? 1 : 0));
             strike = k[hit].wasPressedThisFrame;
+            west = k[hitWest].wasPressedThisFrame;
         }
         if (i < Gamepad.all.Count)
         {
             move += Gamepad.all[i].leftStick.ReadValue() + Gamepad.all[i].dpad.ReadValue();
             strike |= Gamepad.all[i].buttonSouth.wasPressedThisFrame;
+            west |= Gamepad.all[i].buttonWest.wasPressedThisFrame;   // Square / X
         }
         var p = game.Players[i];
         Vector2 pos = p.transform.position;
@@ -230,17 +231,18 @@ public class CanonRhythm : MonoBehaviour
         p.wedge = GameManager.WedgeAt(pos);
         p.noteLabel.text = Chord.Names[p.wedge];
         if (strike && playing) Strike(i, p.wedge, SongTime);
+        if (west && playing) Strike(i, p.wedge, SongTime, true);
     }
 
-    // 一次按键只记录到最近的一个金色目标；错误音不能覆盖已经命中的按键。
-    public void Strike(int player, int pitch, float at)
+    // 一次按键只记录到最近的一个目标；错误音不能覆盖已经命中的按键。South (Cross/A) hits gold, West (Square/X) hits grey.
+    public void Strike(int player, int pitch, float at, bool west = false)
     {
         Target closest = null;
         float distance = Good;
         foreach (var t in targets)
         {
             float d = Mathf.Abs(t.note.time - at);
-            if (!t.note.auto && !t.pressed[player] && d <= distance) { closest = t; distance = d; }
+            if (t.note.auto == west && !t.pressed[player] && d <= distance) { closest = t; distance = d; }
         }
         if (closest == null) return;
         int[] tones = Chord.Tones(closest.note.root, closest.note.quality);
@@ -307,7 +309,7 @@ public class CanonRhythm : MonoBehaviour
     void UpdateHud()
     {
         float now = playing ? Mathf.Clamp(SongTime, 0, chart.duration) : completed > 0 ? chart.duration : 0;
-        game.titleLabel.text = "CANON IN D  |  30 SECOND PIANO\nP1 WASD + Space     P2 Arrows + Enter     P3 Num 5/1/2/3 + Num 0";
+        game.titleLabel.text = "CANON IN D  |  30 SECOND PIANO\nP1 WASD + Space / L Shift     P2 Arrows + Enter / R Shift     P3 Num 5/1/2/3 + Num 0 / Num .";
         game.scoreLabel.text = "TEAM " + score + "\nCombo " + combo + "\nMiss " + misses;
         game.speedLabel.text = now.ToString("0.0") + " / 30 s   " + rate.ToString("0.00") + "x    F1 / R: restart   Esc: pause   Gamepads: stick + Cross/A";
         game.ring.ClearTints();
@@ -320,9 +322,9 @@ public class CanonRhythm : MonoBehaviour
         game.triangle.inPosition = InPosition(next);
         game.chordLabel.text = Chord.Label(next.root, next.quality);
         game.chordLabel.color = c;
-        game.chordNotes.text = string.Join(" + ", Array.ConvertAll(tones, t => Chord.Names[t])) + (next.auto ? "\nSTAND" : "\nPRESS");
+        game.chordNotes.text = string.Join(" + ", Array.ConvertAll(tones, t => Chord.Names[t])) + (next.auto ? "\nSQUARE" : "\nCROSS");
         foreach (var n in chart.notes)
-            if (!n.auto && n.time > next.time)
+            if (n.time > next.time)
             { game.chordNotes.text += "\nNext: " + Chord.Label(n.root, n.quality); break; }
     }
 
