@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.InputSystem;
 
 // 卡农试玩：谱面使用音频中的实际秒数，不使用逐帧累加的节拍。
@@ -26,6 +27,10 @@ public class CanonRhythm : MonoBehaviour
     public float timingOffsetMs; // 正数让判定晚于原始音频，供设备延迟校准。
     public const float GoodWindow = 0.30f;
     public const float PerfectWindow = 0.15f;
+    // 变速: GameManager.canonSpeed is the recording's playback rate. The clock runs at the same rate so the chart
+    // (seconds of the original recording) still lines up, and the CanonMusic mixer's Pitch Shifter puts the key back.
+    public const float MinRate = 0.5f, MaxRate = 2f;   // the Pitch Shifter's range
+    const string PitchParam = "CanonPitchShift";      // exposed on Resources/CanonMusic.mixer
     const float Approach = 3.0f;
     readonly List<Target> targets = new List<Target>();
     GameManager game;
@@ -33,11 +38,27 @@ public class CanonRhythm : MonoBehaviour
     Chart chart;
     Material arcMaterial;
     double startDsp;
+    double clockDsp;   // dsp time of the last tempo change, or of the music's start
+    float clockSong;   // song time at clockDsp
+    float rate = 1f;
+    AudioMixer mixer;
     int spawnIndex, score, combo, misses, completed;
     bool playing, paused;
     double pauseDsp;
     float feedbackUntil;
-    public float SongTime => (float)((paused ? pauseDsp : AudioSettings.dspTime) - startDsp) - timingOffsetMs / 1000f;
+    float ClockTime   // song time without the latency offset; the count-in stays in real seconds
+    {
+        get
+        {
+            double d = (paused ? pauseDsp : AudioSettings.dspTime) - clockDsp;
+            return clockSong + (float)(d < 0 ? d : d * rate);
+        }
+    }
+    public float SongTime => ClockTime - timingOffsetMs / 1000f * rate;
+    public float Rate => rate;
+    // the windows are real seconds, the chart is song seconds
+    float Good => GoodWindow * rate;
+    float Perfect => PerfectWindow * rate;
     public bool Playing => playing;
     public int Completed => completed;
     public int Misses => misses;
@@ -60,6 +81,11 @@ public class CanonRhythm : MonoBehaviour
         music.playOnAwake = false;
         music.spatialBlend = 0;
         music.volume = 0.75f;
+        mixer = Resources.Load<AudioMixer>("CanonMusic");
+        var groups = mixer != null ? mixer.FindMatchingGroups("Master") : null;
+        if (groups != null && groups.Length > 0) music.outputAudioMixerGroup = groups[0];
+        else Debug.LogWarning("Triad: no CanonMusic mixer in Resources, so changing the tempo will change the key too.");
+        SetRate(game.canonSpeed);
         // 独立音源，避免 Synth 的音频过滤器覆盖背景钢琴曲。
         arcMaterial = new Material(Shader.Find("Sprites/Default"));
         var manager = GetComponent<PlayerInputManager>();
@@ -121,7 +147,8 @@ public class CanonRhythm : MonoBehaviour
         playing = true;
         ResetPositions();
         // 预留四秒准备，音频和所有目标使用同一个起始时刻。
-        startDsp = AudioSettings.dspTime + 4;
+        startDsp = clockDsp = AudioSettings.dspTime + 4;
+        clockSong = 0;
         music.PlayScheduled(startDsp);
         feedbackUntil = 0;
     }
@@ -134,6 +161,7 @@ public class CanonRhythm : MonoBehaviour
         foreach (var pad in Gamepad.all) restart |= pad.startButton.wasPressedThisFrame;
         if (restart) Restart();
         if (k != null && k.escapeKey.wasPressedThisFrame && playing) SetPaused(!paused);
+        if (!Mathf.Approximately(Mathf.Clamp(game.canonSpeed, MinRate, MaxRate), rate)) SetRate(game.canonSpeed);
         if (paused) return;
         // 三名玩家共享键盘；手柄按连接顺序控制 P1、P2、P3。
         for (int i = 0; i < 3; i++) ReadPlayer(i);
@@ -150,15 +178,15 @@ public class CanonRhythm : MonoBehaviour
                 t.visual.transform.localScale = Vector3.one * radius;
                 if (t.note.auto && now >= t.note.time)
                     Finish(t, InPosition(t.note), "AUTO");
-                else if (!t.note.auto && now >= t.note.time - GoodWindow)
+                else if (!t.note.auto && now >= t.note.time - Good)
                 {
                     if (AllPressed(t))
                     {
                         bool perfect = true;
-                        for (int p = 0; p < 3; p++) perfect &= Mathf.Abs(t.errors[p]) <= PerfectWindow;
+                        for (int p = 0; p < 3; p++) perfect &= Mathf.Abs(t.errors[p]) <= Perfect;
                         Finish(t, true, perfect ? "PERFECT" : "GOOD");
                     }
-                    else if (now > t.note.time + GoodWindow) Finish(t, false, "MISS");
+                    else if (now > t.note.time + Good) Finish(t, false, "MISS");
                 }
             }
             if (now < 0) game.bannerLabel.text = "Ready  " + Mathf.CeilToInt(-now);
@@ -208,7 +236,7 @@ public class CanonRhythm : MonoBehaviour
     public void Strike(int player, int pitch, float at)
     {
         Target closest = null;
-        float distance = GoodWindow;
+        float distance = Good;
         foreach (var t in targets)
         {
             float d = Mathf.Abs(t.note.time - at);
@@ -281,7 +309,7 @@ public class CanonRhythm : MonoBehaviour
         float now = playing ? Mathf.Clamp(SongTime, 0, chart.duration) : completed > 0 ? chart.duration : 0;
         game.titleLabel.text = "CANON IN D  |  30 SECOND PIANO\nP1 WASD + Space     P2 Arrows + Enter     P3 Num 5/1/2/3 + Num 0";
         game.scoreLabel.text = "TEAM " + score + "\nCombo " + combo + "\nMiss " + misses;
-        game.speedLabel.text = now.ToString("0.0") + " / 30 s    F1 / R: restart   Esc: pause   Gamepads: stick + Cross/A";
+        game.speedLabel.text = now.ToString("0.0") + " / 30 s   " + rate.ToString("0.00") + "x    F1 / R: restart   Esc: pause   Gamepads: stick + Cross/A";
         game.ring.ClearTints();
         Note next = targets.Count > 0 ? targets[0].note : spawnIndex < chart.notes.Length ? chart.notes[spawnIndex] : null;
         if (next == null) { game.chordLabel.text = "DONE"; game.chordNotes.text = ""; return; }
@@ -298,6 +326,18 @@ public class CanonRhythm : MonoBehaviour
             { game.chordNotes.text += "\nNext: " + Chord.Label(n.root, n.quality); break; }
     }
 
+    // re-anchor the clock where it is now, so a tempo change mid-song doesn't make it jump
+    void SetRate(float r)
+    {
+        r = Mathf.Clamp(r, MinRate, MaxRate);
+        double now = paused ? pauseDsp : AudioSettings.dspTime;
+        if (playing && now > clockDsp) { clockSong = ClockTime; clockDsp = now; }
+        rate = r;
+        music.pitch = r;                                    // plays faster or slower, and higher or lower
+        if (mixer != null && !mixer.SetFloat(PitchParam, 1f / r))   // so shift the key back by the inverse
+            Debug.LogWarning("Triad: CanonMusic mixer has no exposed " + PitchParam + ", so the key follows the tempo.");
+    }
+
     void SetPaused(bool value)
     {
         if (value == paused) return;
@@ -305,7 +345,9 @@ public class CanonRhythm : MonoBehaviour
         else
         {
             double elapsed = pauseDsp - startDsp;
-            startDsp += AudioSettings.dspTime - pauseDsp;
+            double gap = AudioSettings.dspTime - pauseDsp;
+            startDsp += gap;
+            clockDsp += gap;
             paused = false;
             if (elapsed < 0) { music.Stop(); music.PlayScheduled(startDsp); }
             else music.UnPause();

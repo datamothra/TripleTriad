@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Tempo")]
     [Range(0.4f, 2.5f)] public float speed = 1f;   // multiplies the song's bpm, set in the Inspector before pressing Play
+    [Range(0.5f, 2f)] public float canonSpeed = 1f;   // Canon mode: the recording's playback rate, key unchanged; works while playing
 
     [Header("Timing window (in beats)")]
     public float earlyBeats = 0.5f;       // a strike this many beats before the downbeat still counts
