@@ -1,4 +1,4 @@
-// chord names and stuff, the chord values dont really matter that much in the curent form of the game
+// note names, chord spellings and labels; Tones is what judging compares the players' notes against
 public static class Chord
 {
     public enum Note { C, Cs, D, Ds, E, F, Fs, G, Gs, A, As, B }

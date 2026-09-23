@@ -2894,7 +2894,6 @@ MonoBehaviour:
   songs:
   - {fileID: 11400000, guid: b033c441a90354d95a74adc2424c62e0, type: 2}
   - {fileID: 11400000, guid: 44e44da13480a43cab5466b8663752c2, type: 2}
-  - {fileID: 11400000, guid: 556ed0115f4014bfe8cb5b7edc51c70b, type: 2}
   synth: {fileID: 1492246265}
   ring: {fileID: 735192206}
   ringTemplate: {fileID: 390533129}
@@ -2919,7 +2918,9 @@ MonoBehaviour:
   shakeCamera: {fileID: 0}
   spawnScale: 24
   landScale: 3.5
-  speed: 1.55
+  speed: 1
+  musicMixer: {fileID: 24100000, guid: 4ebba2c108fa44d88b2378cb81e562db, type: 2}
+  musicVolume: 0.75
 --- !u!4 &1060368624
 Transform:
   m_ObjectHideFlags: 0

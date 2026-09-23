@@ -9,4 +9,4 @@ EditorBuildSettings:
     path: Assets/Scenes/Triad.unity
     guid: 49e464a5058fe4f38b5b73d065bddd6d
   m_configObjects:
-    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 4142304b21f074815b99cd0c2f7cdab1, type: 3}

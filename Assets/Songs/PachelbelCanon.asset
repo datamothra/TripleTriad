@@ -13,29 +13,59 @@ MonoBehaviour:
   m_Name: PachelbelCanon
   m_EditorClassIdentifier: Assembly-CSharp::Song
   meter: 4/4
-  bpm: 84
+  bpm: 70
   entries:
-  - root: 11
-    quality: 1
-    beats: 2
   - root: 2
     quality: 1
-    beats: 2
+    beats: 4
+    white: 0
+  - root: 11
+    quality: 2
+    beats: 4
+    white: 0
   - root: 7
     quality: 1
-    beats: 2
-  - root: 10
-    quality: 1
-    beats: 2
-  - root: 3
+    beats: 4
+    white: 0
+  - root: 7
     quality: 1
     beats: 4
-  - root: 9
-    quality: 2
-    beats: 2
+    white: 0
   - root: 2
     quality: 1
-    beats: 2
-  - root: 9
+    beats: 1
+    white: 0
+  - root: 2
+    quality: 1
+    beats: 3
+    white: 1
+  - root: 11
+    quality: 2
+    beats: 1
+    white: 0
+  - root: 11
+    quality: 2
+    beats: 3
+    white: 1
+  - root: 7
+    quality: 1
+    beats: 1
+    white: 0
+  - root: 7
+    quality: 1
+    beats: 3
+    white: 1
+  - root: 7
+    quality: 1
+    beats: 1
+    white: 0
+  - root: 7
+    quality: 1
+    beats: 3
+    white: 1
+  - root: 2
     quality: 1
     beats: 4
+    white: 0
+  backing: {fileID: 8300000, guid: 79ccca2603bbe7946a56b6c40072817b, type: 3}
+  backingOffset: 0.117

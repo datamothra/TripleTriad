@@ -1,1 +1,0 @@
-PASSED static easy-chart checks: 9 gold + 4 grey; gold intervals >3.3s; grey uses previous chord; >2.5s after grey before next gold; ordered timestamps within original 30s audio. Unity play-mode check not rerun for this tuning.

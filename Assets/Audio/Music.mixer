@@ -6,7 +6,7 @@ AudioMixerController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: CanonMusic
+  m_Name: Music
   m_OutputGroup: {fileID: 0}
   m_MasterGroup: {fileID: 24300002}
   m_Snapshots:
@@ -17,7 +17,7 @@ AudioMixerController:
   m_UpdateMode: 0
   m_ExposedParameters:
   - guid: 297064adf4824b9faa9b096bb71efb79
-    name: CanonPitchShift
+    name: MusicPitchShift
   m_AudioMixerGroupViews:
   - guids:
     - 1435a13fc3cc4af0850d07feeec93075
