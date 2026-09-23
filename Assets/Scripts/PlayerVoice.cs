@@ -22,7 +22,7 @@ public class PlayerVoice : MonoBehaviour
 
     void Awake()
     {
-        voice = GetComponent<PlayerInput>().playerIndex;         // 0, 1, 2 in join order
+        voice = Mathf.Max(0, GetComponent<PlayerInput>().playerIndex);         // 0, 1, 2 in join order
         wedge = new[] { 0, 4, 7 }[voice % 3];                    // spawn on C, E, G
         transform.position = GameManager.Polar(3.4f, wedge);
         if (tagLabel != null) tagLabel.text = "P" + (voice + 1);
@@ -44,6 +44,7 @@ public class PlayerVoice : MonoBehaviour
 
     void Update()
     {
+        if (game != null && game.canonMusicMode) return; // 音乐模式统一先移动，再读取按键和判定。
         transform.position += (Vector3)(move * moveSpeed * Time.deltaTime);
         var p = (Vector2)transform.position;                     // keep them in the running band
         float r = p.magnitude;
