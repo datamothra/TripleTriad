@@ -19,7 +19,7 @@ public class GameManager : MonoBehaviour
     [Header("Tempo")]
     [Range(0.4f, 2.5f)] public float speed = 1f;   // multiplies the song's bpm; a recording plays that much faster with its key unchanged (0.5 to 2). Works while playing
 
-    [Header("Background recording")]
+    [Header("Music")]
     public AudioMixer musicMixer;         // Music.mixer: its Pitch Shifter puts the key back when speed isn't 1
     [Range(0f, 1f)] public float musicVolume = 0.75f;
 

@@ -17,7 +17,7 @@ public class Song : ScriptableObject
     public float bpm = 66;                 // beats per minute, where a beat is the meter's pulse (dotted quarter in 6/8)
     public List<Entry> entries = new List<Entry>();
 
-    [Header("Background recording")]
+    [Header("Recording")]
     public AudioClip recording;            // tempo-synced to bpm; empty = no music, and the chart loops until game over
     public float firstChordSeconds;        // seconds into the recording where the first chord lands
 }
