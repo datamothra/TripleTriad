@@ -17,26 +17,31 @@ public class PlayerVoice : MonoBehaviour
     const float InnerRadius = 2.15f, OuterRadius = 4.55f, StartRadius = 3.4f;
     const float PressCooldown = 0.06f;    // a press can't register twice within this
 
-    // set at runtime, so not saved with the prefab or shown in the Inspector
-    [System.NonSerialized] public GameManager game;
-    [System.NonSerialized] public Triad.Synth synth;
-    [System.NonSerialized] public int note;                  // the note under the player, 0 = C
-    [System.NonSerialized] public int playerIndex;           // 0, 1, 2 in join order; also the synth voice
-    [System.NonSerialized] public float lastPressTime = -99f;   // for the cooldown, in seconds
-    [System.NonSerialized] public float lastGoldBeat = float.MinValue, lastWhiteBeat = float.MinValue;   // on the song's beat clock
-    [System.NonSerialized] public int lastGoldMidi, lastWhiteMidi;
+    // anyone can read these; only the player changes them. Unity doesn't save properties, so they stay out of the Inspector
+    public int Note { get; private set; }                    // the note under the player, 0 = C
+    public int PlayerIndex { get; private set; }             // 0, 1, 2 in join order; also the synth voice
+    public float LastGoldBeat { get; private set; } = float.MinValue;    // on the song's beat clock
+    public float LastWhiteBeat { get; private set; } = float.MinValue;
+    public int LastGoldMidi { get; private set; }
+    public int LastWhiteMidi { get; private set; }
 
+    GameManager game;                     // both handed over by Join
+    Triad.Synth synth;
+    float lastPressTime = -99f;           // for the cooldown, in seconds
     Vector2 moveInput;
 
-    public int MidiNote => midiOfC + note;
+    public int MidiNote => midiOfC + Note;
+
+    // the game calls this when the player joins
+    public void Join(GameManager game, Triad.Synth synth) { this.game = game; this.synth = synth; }
 
     void Awake()
     {
-        playerIndex = Mathf.Max(0, GetComponent<PlayerInput>().playerIndex);
-        if (padSprite != null && playerColors.Length > 0) padSprite.color = playerColors[playerIndex % playerColors.Length];
-        note = startNotes.Length > 0 ? startNotes[playerIndex % startNotes.Length] : 0;
-        transform.position = GameManager.RingPosition(StartRadius, note);
-        if (playerLabel != null) playerLabel.text = "P" + (playerIndex + 1);   // who you are, it never changes
+        PlayerIndex = Mathf.Max(0, GetComponent<PlayerInput>().playerIndex);
+        if (padSprite != null && playerColors.Length > 0) padSprite.color = playerColors[PlayerIndex % playerColors.Length];
+        Note = startNotes.Length > 0 ? startNotes[PlayerIndex % startNotes.Length] : 0;
+        transform.position = GameManager.RingPosition(StartRadius, Note);
+        if (playerLabel != null) playerLabel.text = "P" + (PlayerIndex + 1);   // who you are, it never changes
     }
 
     // the PlayerInput on this object calls these by action name (Send Messages)
@@ -46,18 +51,18 @@ public class PlayerVoice : MonoBehaviour
     void OnPrevSong(InputValue v) { if (v.isPressed && game != null) game.ChangeSong(-1); }
 
     // gold chords take Cross / A, white notes Square / X; either way the press sounds your note
-    void OnStrikeGold(InputValue v)  { if (v.isPressed && PlayNote()) { lastGoldBeat = game.SongBeat; lastGoldMidi = MidiNote; } }
-    void OnStrikeWhite(InputValue v) { if (v.isPressed && PlayNote()) { lastWhiteBeat = game.SongBeat; lastWhiteMidi = MidiNote; } }
+    void OnStrikeGold(InputValue v)  { if (v.isPressed && PlayNote()) { LastGoldBeat = game.SongBeat; LastGoldMidi = MidiNote; } }
+    void OnStrikeWhite(InputValue v) { if (v.isPressed && PlayNote()) { LastWhiteBeat = game.SongBeat; LastWhiteMidi = MidiNote; } }
 
     bool PlayNote()
     {
         if (game == null || Time.time - lastPressTime < PressCooldown) return false;
-        if (synth != null) synth.Strike(playerIndex, MidiNote, strikeVelocity);   // one voice per player
+        if (synth != null) synth.Strike(PlayerIndex, MidiNote, strikeVelocity);   // one voice per player
         lastPressTime = Time.time;
         return true;
     }
 
-    public void ForgetStrikes() { lastGoldBeat = lastWhiteBeat = float.MinValue; }   // a new run starts its beat clock again
+    public void ForgetStrikes() { LastGoldBeat = LastWhiteBeat = float.MinValue; }   // a new run starts its beat clock again
 
     void Update()
     {
@@ -65,7 +70,7 @@ public class PlayerVoice : MonoBehaviour
         var p = (Vector2)transform.position;                     // keep them in the running band
         float r = p.magnitude;
         if (r > 0.01f) transform.position = p / r * Mathf.Clamp(r, InnerRadius, OuterRadius);
-        note = game != null ? game.ring.WedgeAt(transform.position) : GameManager.WedgeAt(transform.position);   // angle on the ring = wedge = note
-        if (noteLabel != null) noteLabel.text = Chord.NoteName(note);
+        Note = game != null ? game.ring.WedgeAt(transform.position) : GameManager.WedgeAt(transform.position);   // angle on the ring = wedge = note
+        if (noteLabel != null) noteLabel.text = Chord.NoteName(Note);
     }
 }

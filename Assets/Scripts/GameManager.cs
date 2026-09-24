@@ -153,8 +153,7 @@ public class GameManager : MonoBehaviour
     void OnPlayerJoined(PlayerInput input)
     {
         var player = input.GetComponent<PlayerVoice>();
-        player.game = this;
-        player.synth = synth;
+        player.Join(this, synth);
         players.Add(player);
     }
 
@@ -204,7 +203,7 @@ public class GameManager : MonoBehaviour
             var c = ColorOf(entry);
             for (int i = 0; i < notes.Length; i++) ring.Highlight(notes[i], new Color(c.r, c.g, c.b, i == 0 ? rootHighlight : toneHighlight));
         }
-        foreach (var p in players) ring.Highlight(p.note, new Color(1, 1, 1, playerHighlight));
+        foreach (var p in players) ring.Highlight(p.Note, new Color(1, 1, 1, playerHighlight));
 
         // a miss washes over everything and fades out
         missFlash = Mathf.Max(0f, missFlash - dt / missFlashSeconds);
@@ -212,7 +211,7 @@ public class GameManager : MonoBehaviour
             for (int w = 0; w < 12; w++) ring.Highlight(w, new Color(missColor.r, missColor.g, missColor.b, missFlashStrength * missFlash));
         bannerLabel.color = Color.Lerp(bannerRestColor, missColor, missFlash);
         if (shakeCamera != null) shakeCamera.position = cameraRestPosition + (Vector3)(Random.insideUnitCircle * missShakeAmount * missFlash);
-        triangle.onChord = notes != null && !entry.white && players.Count == 3 && new HashSet<int>(players.Select(p => p.note)).SetEquals(notes);
+        triangle.OnChord = notes != null && !entry.white && players.Count == 3 && new HashSet<int>(players.Select(p => p.Note)).SetEquals(notes);
 
         // center: the count-in, then the chord that is coming
         if (running && songBeat < -CountInBeats)
@@ -285,12 +284,12 @@ public class GameManager : MonoBehaviour
         var entry = EntryAt(chord.entryIndex);
         if (entry.white)                                         // a white note: anyone standing on it presses Square / X
         {
-            if (players.Any(p => p.lastWhiteBeat >= chord.landBeat - earlyBeats && p.lastWhiteMidi % 12 == (int)entry.root)) Resolve(chord, true, null);
+            if (players.Any(p => p.LastWhiteBeat >= chord.landBeat - earlyBeats && p.LastWhiteMidi % 12 == (int)entry.root)) Resolve(chord, true, null);
             else if (songBeat > chord.landBeat + lateBeats) Resolve(chord, false, "nobody pressed Square on it");
             return;
         }
-        var struck = players.Where(p => p.lastGoldBeat >= chord.landBeat - earlyBeats).ToList();   // a gold chord: all three, on its three notes
-        bool right = struck.Count == 3 && new HashSet<int>(struck.Select(p => p.lastGoldMidi % 12)).SetEquals(Chord.Tones(entry.root, entry.quality));
+        var struck = players.Where(p => p.LastGoldBeat >= chord.landBeat - earlyBeats).ToList();   // a gold chord: all three, on its three notes
+        bool right = struck.Count == 3 && new HashSet<int>(struck.Select(p => p.LastGoldMidi % 12)).SetEquals(Chord.Tones(entry.root, entry.quality));
         if (right) Resolve(chord, true, null);
         else if (songBeat > chord.landBeat + lateBeats)
             Resolve(chord, false, struck.Count == 0 ? "nobody struck" : struck.Count < 3 ? (3 - struck.Count) + " didn't strike in time" : "wrong notes");
