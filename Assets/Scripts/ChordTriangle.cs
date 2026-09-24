@@ -4,11 +4,10 @@ using UnityEngine;
 [RequireComponent(typeof(LineRenderer))]
 public class ChordTriangle : MonoBehaviour
 {
-    public Color idle = new Color(1, 1, 1, 0.2f);
-    public Color lit = new Color(0.875f, 0.686f, 0.196f);
+    public Color idle = new Color(1, 1, 1, 0.2f);   // lit uses the game's accent gold
     public float idleWidth = 0.07f, litWidth = 0.12f;
     public GameManager game;
-    [HideInInspector] public bool inPosition;
+    [System.NonSerialized] public bool inPosition;
     LineRenderer line;
 
     void Awake() { line = GetComponent<LineRenderer>(); }
@@ -18,7 +17,7 @@ public class ChordTriangle : MonoBehaviour
         var players = game.Players;
         line.positionCount = players.Count;
         for (int i = 0; i < players.Count; i++) line.SetPosition(i, players[i].transform.position);
-        line.startColor = line.endColor = inPosition ? lit : idle;
+        line.startColor = line.endColor = inPosition ? game.accent : idle;
         line.startWidth = line.endWidth = inPosition ? litWidth : idleWidth;
     }
 }

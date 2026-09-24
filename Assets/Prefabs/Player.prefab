@@ -172,18 +172,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVoice
   noteLabel: {fileID: 7187351836737751864}
   tagLabel: {fileID: 7695275557828827160}
-  game: {fileID: 0}
-  synth: {fileID: 0}
   moveSpeed: 6.5
-  innerRadius: 2.15
-  outerRadius: 4.55
-  wedge: 0
-  voice: 0
-  lastStrikeTime: -99
-  lastStrikeMidi: 0
-  coolDownTime: 0.06
   pad: {fileID: 748505456803579808}
-  colors: []
   colours:
   - {r: 0, g: 1, b: 1, a: 1}
   - {r: 1, g: 0, b: 1, a: 1}

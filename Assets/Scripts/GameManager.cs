@@ -40,9 +40,8 @@ public class GameManager : MonoBehaviour
     public int comboCap = 10;             // combo steps that still add bonus
 
     [Header("Approach circle")]
-    public float spawnScale = 24f, landScale = 3.5f;   // size when it appears, size on the red line
-    public float approachChords = 1f;     // it appears this many of its own chord lengths before landing
-    public float minApproachBeats = 3f;   // but never closes faster than this, so a short chord still gets fair warning
+    public float spawnScale = 24f;        // size when it appears
+    public float minApproachBeats = 3f;   // a ring closes over its chord's length, but never faster than this
 
     [Header("Wedge highlights (alpha)")]
     public float rootTint = 0.70f;
@@ -61,8 +60,6 @@ public class GameManager : MonoBehaviour
     public float missTint = 0.85f;        // how strongly the ring turns missColour
     public float missShake = 0.35f;
     public Transform shakeCamera;         // drag Main Camera here, empty = no shake
-    public int missThudMidi = 43;         // lowest of the three thud notes, a semitone apart
-    public float missThudVelocity = 1f;
 
     [Header("Banner")]
     public float hitMessageSeconds = 3f, missMessageSeconds = 3f, songMessageSeconds = 2f;
@@ -88,6 +85,8 @@ public class GameManager : MonoBehaviour
     float anchorBeat;
     float rate = 1f;                      // speed as actually used; a recording only goes 0.5x to 2x
     const string PitchParam = "MusicPitchShift";   // exposed on Music.mixer
+    const float LandScale = 3.5f;         // the red line's diameter: just inside the wedges' inner edge (3.44 across)
+    const int MissThudMidi = 43;          // lowest of the three thud notes of a miss, a semitone apart
     // the Pitch Shifter holds back about one FFT window before it outputs anything: measured 26 to 43 ms with its
     // FFT size at 2048. The recording starts this much early when it goes through the mixer. Remeasure if the FFT size changes
     const float PitchShiftLatency = 0.030f;
@@ -121,7 +120,7 @@ public class GameManager : MonoBehaviour
     float EndBeat => song.backing != null ? (song.backing.length - song.backingOffset) * song.bpm / 60f : float.MaxValue;
     Color ChordColour(Song.Entry e) => e.white ? whiteNote : accent;
     string Name(Song.Entry e) => e.white ? Chord.Names[(int)e.root] : Chord.Label(e.root, e.quality);
-    float Approach(Song.Entry e) => Mathf.Max(e.beats * approachChords, minApproachBeats);   // beats a ring takes to close
+    float Approach(Song.Entry e) => Mathf.Max(e.beats, minApproachBeats);   // beats a ring takes to close
 
     // the chord about to land and its beat, for tests and tools
     public bool TryGetCurrentChord(out Song.Entry entry, out float land)
@@ -185,7 +184,7 @@ public class GameManager : MonoBehaviour
 
             while (nextLand <= EndBeat && songBeat >= nextLand - Approach(Entry(nextIndex))) Spawn();     // a ring appears Approach beats before its bar line
             foreach (var m in markers)
-                m.go.transform.localScale = Vector3.one * Mathf.LerpUnclamped(landScale, spawnScale, (m.land - songBeat) / m.approach);
+                m.go.transform.localScale = Vector3.one * Mathf.LerpUnclamped(LandScale, spawnScale, (m.land - songBeat) / m.approach);
             if (Current != null && songBeat >= Current.land) Judge(songBeat);
             if (!gameOver && markers.Count == 0 && nextLand > EndBeat)    // every chord the recording has room for is done
             {
@@ -232,7 +231,7 @@ public class GameManager : MonoBehaviour
         else { chordLabel.text = ""; chordNotes.text = ""; }
 
         // the red line is the metronome
-        coreLine.transform.localScale = Vector3.one * (landScale + pulseGrow * beatPulse);
+        coreLine.transform.localScale = Vector3.one * (LandScale + pulseGrow * beatPulse);
         coreLine.color = new Color(coreColour.r, coreColour.g, coreColour.b, coreColour.a * Mathf.Lerp(pulseDimAlpha, 1f, beatPulse));
 
         int shown = cur != null ? cur.index : nextIndex;
@@ -317,7 +316,7 @@ public class GameManager : MonoBehaviour
         {
             combo = 0; lives--;
             missFlash = 1f;
-            for (int v = 0; v < 3; v++) synth.Strike(v, missThudMidi + v, missThudVelocity);      // three low notes a semitone apart, an ugly thud
+            for (int v = 0; v < 3; v++) synth.Strike(v, MissThudMidi + v, 1f);      // three low notes a semitone apart, an ugly thud
             Say("missed " + Name(e) + ": " + why, missMessageSeconds);
         }
         if (shiftEvery > 0 && ++chordsDone % shiftEvery == 0) ring.Shift(Random.Range(shiftMinWedges, shiftMaxWedges + 1) * (shiftEitherWay && Random.value < 0.5f ? -1 : 1));

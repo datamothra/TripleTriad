@@ -2917,7 +2917,6 @@ MonoBehaviour:
   missShake: 0.35
   shakeCamera: {fileID: 0}
   spawnScale: 24
-  landScale: 3.5
   speed: 1
   musicMixer: {fileID: 24100000, guid: 4ebba2c108fa44d88b2378cb81e562db, type: 2}
   musicVolume: 0.75
@@ -3148,9 +3147,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChordTriangle
   idle: {r: 1, g: 1, b: 1, a: 0.2}
-  lit: {r: 0.875, g: 0.686, b: 0.196, a: 1}
   game: {fileID: 1060368623}
-  inPosition: 0
 --- !u!120 &1160625714
 LineRenderer:
   serializedVersion: 3
