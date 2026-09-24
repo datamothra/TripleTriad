@@ -171,10 +171,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVoice
   noteLabel: {fileID: 7187351836737751864}
-  tagLabel: {fileID: 7695275557828827160}
+  playerLabel: {fileID: 7695275557828827160}
   moveSpeed: 6.5
-  pad: {fileID: 748505456803579808}
-  colors:
+  padSprite: {fileID: 748505456803579808}
+  playerColors:
   - {r: 0, g: 1, b: 1, a: 1}
   - {r: 1, g: 0, b: 1, a: 1}
   - {r: 1, g: 0.92156863, b: 0.015686275, a: 1}

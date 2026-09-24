@@ -17,7 +17,7 @@
                     "priority": 0
                 },
                 {
-                    "name": "Strike",
+                    "name": "StrikeGold",
                     "type": "Button",
                     "id": "6845bcd0-e4ea-413d-90b3-ca4ebca8e52d",
                     "expectedControlType": "Button",
@@ -57,7 +57,7 @@
                     "priority": 0
                 },
                 {
-                    "name": "StrikeWest",
+                    "name": "StrikeWhite",
                     "type": "Button",
                     "id": "ab1f1238-7e9d-4430-b42a-4f79af46224f",
                     "expectedControlType": "Button",
@@ -97,7 +97,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
-                    "action": "Strike",
+                    "action": "StrikeGold",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -141,7 +141,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
-                    "action": "StrikeWest",
+                    "action": "StrikeWhite",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -3,7 +3,8 @@ public static class Chord
 {
     public enum Note { C, Cs, D, Ds, E, F, Fs, G, Gs, A, As, B }
     public enum Quality { Major = 1, Minor = 2, Diminished = 3, Augmented = 4 }   // numbered so saved songs keep their values
-    public static readonly string[] Names = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
+    static readonly string[] noteNames = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
+    public static string NoteName(int note) => noteNames[(note % 12 + 12) % 12];
 
     public static int[] Tones(Note root, Quality q)
     {
@@ -13,5 +14,5 @@ public static class Chord
         return new[] { r, (r + third) % 12, (r + fifth) % 12 };
     }
 
-    public static string Label(Note root, Quality q) => Names[(int)root] + " " + q.ToString().ToLower();
+    public static string Label(Note root, Quality q) => NoteName((int)root) + " " + q.ToString().ToLower();
 }

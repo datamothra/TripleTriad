@@ -67,5 +67,5 @@ MonoBehaviour:
     quality: 1
     beats: 4
     white: 0
-  backing: {fileID: 8300000, guid: 79ccca2603bbe7946a56b6c40072817b, type: 3}
-  backingOffset: 0.117
+  recording: {fileID: 8300000, guid: 79ccca2603bbe7946a56b6c40072817b, type: 3}
+  firstChordSeconds: 0.117

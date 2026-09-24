@@ -18,6 +18,6 @@ public class Song : ScriptableObject
     public List<Entry> entries = new List<Entry>();
 
     [Header("Background recording")]
-    public AudioClip backing;              // tempo-synced to bpm; empty = no music, and the chart loops until game over
-    public float backingOffset;            // seconds into the recording where the first chord lands
+    public AudioClip recording;            // tempo-synced to bpm; empty = no music, and the chart loops until game over
+    public float firstChordSeconds;        // seconds into the recording where the first chord lands
 }

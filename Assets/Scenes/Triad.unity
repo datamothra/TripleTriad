@@ -2375,7 +2375,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee86113fc42d242be99bb4f33127d7dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Ring
-  shiftSpeed: 0.15
+  turnSeconds: 0.15
 --- !u!4 &735192209
 Transform:
   m_ObjectHideFlags: 0
@@ -2896,27 +2896,27 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 44e44da13480a43cab5466b8663752c2, type: 2}
   synth: {fileID: 1492246265}
   ring: {fileID: 735192206}
-  ringTemplate: {fileID: 390533129}
-  coreLine: {fileID: 2054193211}
+  approachRingTemplate: {fileID: 390533129}
+  targetLine: {fileID: 2054193211}
   triangle: {fileID: 1160625713}
   chordLabel: {fileID: 1100419293}
-  chordNotes: {fileID: 189445991}
+  chordNotesLabel: {fileID: 189445991}
   titleLabel: {fileID: 251612731}
   scoreLabel: {fileID: 4079314}
   bannerLabel: {fileID: 452664578}
   speedLabel: {fileID: 650707190}
-  accent: {r: 0.875, g: 0.686, b: 0.196, a: 1}
+  goldColor: {r: 0.875, g: 0.686, b: 0.196, a: 1}
   earlyBeats: 0.5
   lateBeats: 0.25
-  shiftEvery: 2
-  shiftMinWedges: 1
-  shiftMaxWedges: 5
-  shiftEitherWay: 1
+  turnEveryChords: 2
+  turnMinWedges: 1
+  turnMaxWedges: 5
+  turnEitherWay: 1
   missColor: {r: 0.9, g: 0.1, b: 0.15, a: 1}
-  missSeconds: 0.6
-  missShake: 0.35
+  missFlashSeconds: 0.6
+  missShakeAmount: 0.35
   shakeCamera: {fileID: 0}
-  spawnScale: 24
+  ringStartSize: 24
   speed: 1
   musicMixer: {fileID: 24100000, guid: 4ebba2c108fa44d88b2378cb81e562db, type: 2}
   musicVolume: 0.75
@@ -3146,7 +3146,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d1831b4ed5eb4f079cf24209566bdcc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChordTriangle
-  idle: {r: 1, g: 1, b: 1, a: 0.2}
+  idleColor: {r: 1, g: 1, b: 1, a: 0.2}
   game: {fileID: 1060368623}
 --- !u!120 &1160625714
 LineRenderer:
