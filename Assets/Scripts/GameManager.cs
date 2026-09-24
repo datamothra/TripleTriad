@@ -22,7 +22,6 @@ public class GameManager : MonoBehaviour
     [Header("Background recording")]
     public AudioMixer musicMixer;         // Music.mixer: its Pitch Shifter puts the key back when speed isn't 1
     [Range(0f, 1f)] public float musicVolume = 0.75f;
-    public float pitchShiftLatencyMs = 30f;   // the Pitch Shifter delays the recording about this much (measured 26 to 43 ms), so it starts that early
 
     [Header("Timing window (in beats)")]
     public float earlyBeats = 0.5f;       // a strike this many beats before the downbeat still counts
@@ -89,6 +88,9 @@ public class GameManager : MonoBehaviour
     float anchorBeat;
     float rate = 1f;                      // speed as actually used; a recording only goes 0.5x to 2x
     const string PitchParam = "MusicPitchShift";   // exposed on Music.mixer
+    // the Pitch Shifter holds back about one FFT window before it outputs anything: measured 26 to 43 ms with its
+    // FFT size at 2048. The recording starts this much early when it goes through the mixer. Remeasure if the FFT size changes
+    const float PitchShiftLatency = 0.030f;
 
     public static Vector3 Polar(float r, int pitchClass)
     {
@@ -110,7 +112,7 @@ public class GameManager : MonoBehaviour
     public Song CurrentSong => song;
     public AudioSource Music => music;
     bool Shifting => musicGroup != null && !Mathf.Approximately(rate, 1f);
-    public float MusicLead => Shifting ? pitchShiftLatencyMs / 1000f * rate : 0f;   // recording seconds the source runs ahead of the clock
+    public float MusicLead => Shifting ? PitchShiftLatency * rate : 0f;   // recording seconds the source runs ahead of the clock
     float Bpm => song.bpm * rate;
     Song.Entry Entry(int i) => song.entries[i % song.entries.Count];
     Marker Current => markers.Count > 0 ? markers[0] : null;          // the chord about to land
