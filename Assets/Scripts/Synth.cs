@@ -32,8 +32,8 @@ namespace Triad
             public bool sounding;
             public float velocity;                    // 0 to 1
             public float ageSeconds;                  // since the strike, for the attack ramp
-            public float promptDecay;                 // 1 at the strike, decays towards 0
-            public float hammerNoise;                 // 1 at the strike, decays towards 0
+            public float promptDecay;                 // 1 at the strike, decays toward 0
+            public float hammerNoise;                 // 1 at the strike, decays toward 0
             public readonly float[] phase = new float[PartialCount];              // 0 to 1 cycles
             public readonly float[] phaseIncrement = new float[PartialCount];     // cycles per sample
             public readonly float[] partialAmplitude = new float[PartialCount];   // current envelope level
