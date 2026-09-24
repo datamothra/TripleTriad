@@ -15,7 +15,6 @@ public class GameManager : MonoBehaviour
     public TMP_Text chordLabel, chordNotes, titleLabel, scoreLabel, bannerLabel, speedLabel;
     public Color accent = new Color(0.875f, 0.686f, 0.196f);
     public Color whiteNote = Color.white;    // a white note's arc and wedge (Square / X)
-    public float whiteArcWidth = 0.2f, whiteArcDegrees = 28f;   // the arc over its wedge
 
     [Header("Tempo")]
     [Range(0.4f, 2.5f)] public float speed = 1f;   // multiplies the song's bpm; a recording plays that much faster with its key unchanged (0.5 to 2). Works while playing
@@ -258,6 +257,9 @@ public class GameManager : MonoBehaviour
         nextIndex++;
     }
 
+    const float ArcDegrees = 28f;   // a wedge is 30; the gap keeps neighbouring arcs apart
+    const float ArcWidth = 0.2f;
+
     // an arc over one wedge, the same size as the approach circle; it lives on the ring so it turns with it
     GameObject WhiteArc(int note)
     {
@@ -267,13 +269,13 @@ public class GameManager : MonoBehaviour
         line.useWorldSpace = false;
         line.sharedMaterial = arcMaterial;
         line.startColor = line.endColor = whiteNote;
-        line.startWidth = line.endWidth = whiteArcWidth;
+        line.startWidth = line.endWidth = ArcWidth;
         line.sortingOrder = 18;
         line.positionCount = 17;
         float mid = 90f - note * 30f;                            // C at the top, clockwise, like Polar
         for (int j = 0; j < 17; j++)
         {
-            float a = (mid - whiteArcDegrees / 2f + j * whiteArcDegrees / 16f) * Mathf.Deg2Rad;
+            float a = (mid - ArcDegrees / 2f + j * ArcDegrees / 16f) * Mathf.Deg2Rad;
             line.SetPosition(j, new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f) * 0.5f);   // radius 0.5, so its scale is a diameter like the circle's
         }
         return line.gameObject;
