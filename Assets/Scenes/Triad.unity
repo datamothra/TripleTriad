@@ -2912,7 +2912,7 @@ MonoBehaviour:
   shiftMinWedges: 1
   shiftMaxWedges: 5
   shiftEitherWay: 1
-  missColour: {r: 0.9, g: 0.1, b: 0.15, a: 1}
+  missColor: {r: 0.9, g: 0.1, b: 0.15, a: 1}
   missSeconds: 0.6
   missShake: 0.35
   shakeCamera: {fileID: 0}

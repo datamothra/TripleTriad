@@ -13,7 +13,7 @@ public class PlayerVoice : MonoBehaviour
 
     public SpriteRenderer pad;
 
-    public Color[] colours = { Color.cyan, Color.magenta, Color.yellow };   // one per player, in join order
+    public Color[] colors = { Color.cyan, Color.magenta, Color.yellow };   // one per player, in join order
 
     // the running band sits on the wedge sprites, so these follow the ring art rather than taste
     const float InnerRadius = 2.15f, OuterRadius = 4.55f, SpawnRadius = 3.4f;
@@ -35,7 +35,7 @@ public class PlayerVoice : MonoBehaviour
     void Awake()
     {
         voice = Mathf.Max(0, GetComponent<PlayerInput>().playerIndex);         // 0, 1, 2 in join order
-        if (pad != null && colours.Length > 0) pad.color = colours[voice % colours.Length];
+        if (pad != null && colors.Length > 0) pad.color = colors[voice % colors.Length];
         wedge = spawnWedges.Length > 0 ? spawnWedges[voice % spawnWedges.Length] : 0;
         transform.position = GameManager.Polar(SpawnRadius, wedge);
         if (tagLabel != null) tagLabel.text = "P" + (voice + 1);     // the tag on the pad is who you are, it never changes

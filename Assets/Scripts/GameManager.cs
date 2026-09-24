@@ -53,11 +53,11 @@ public class GameManager : MonoBehaviour
     public float pulseGrow = 0.22f;       // how much the red line swells on the beat
     public float pulseDimAlpha = 0.7f;    // the red line's alpha between beats, 1 on the beat
 
-    // a miss: the whole ring and the banner flash this colour, the camera shakes, the synth thuds
+    // a miss: the whole ring and the banner flash this color, the camera shakes, the synth thuds
     [Header("Miss")]
-    public Color missColour = new Color(0.9f, 0.1f, 0.15f);
+    public Color missColor = new Color(0.9f, 0.1f, 0.15f);
     public float missSeconds = 0.6f;
-    public float missTint = 0.85f;        // how strongly the ring turns missColour
+    public float missTint = 0.85f;        // how strongly the ring turns missColor
     public float missShake = 0.35f;
     public Transform shakeCamera;         // drag Main Camera here, empty = no shake
 
@@ -73,8 +73,8 @@ public class GameManager : MonoBehaviour
     float nextLand, beatPulse, bannerUntil, missFlash;
     Vector3 cameraHome;
     bool gameOver;
-    Color bannerColour;                   // the banner's colour as set in the Inspector, a miss turns it red for a moment
-    Color coreColour;                     // the red line's colour as set in the Inspector; only its alpha pulses
+    Color bannerColor;                   // the banner's color as set in the Inspector, a miss turns it red for a moment
+    Color coreColor;                     // the red line's color as set in the Inspector; only its alpha pulses
     Material arcMaterial;                 // shared by every white arc
 
     // the beat clock runs on the audio hardware's clock, so it can't drift from the recording:
@@ -118,7 +118,7 @@ public class GameManager : MonoBehaviour
     float CountInBeats => Entry(0).beats;
     // the beat where the recording runs out; no recording = the chart loops forever
     float EndBeat => song.backing != null ? (song.backing.length - song.backingOffset) * song.bpm / 60f : float.MaxValue;
-    Color ChordColour(Song.Entry e) => e.white ? whiteNote : accent;
+    Color ChordColor(Song.Entry e) => e.white ? whiteNote : accent;
     string Name(Song.Entry e) => e.white ? Chord.Names[(int)e.root] : Chord.Label(e.root, e.quality);
     float Approach(Song.Entry e) => Mathf.Max(e.beats, minApproachBeats);   // beats a ring takes to close
 
@@ -145,8 +145,8 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        coreColour = coreLine.color;
-        bannerColour = bannerLabel.color;
+        coreColor = coreLine.color;
+        bannerColor = bannerLabel.color;
         if (shakeCamera != null) cameraHome = shakeCamera.position;
         Restart();
     }
@@ -195,14 +195,14 @@ public class GameManager : MonoBehaviour
         beatPulse = Mathf.Max(0f, beatPulse - dt * pulseDecay);
         lastPlayerCount = players.Count;
 
-        // wedges: the chord's notes light up in its colour (root strongest), players lighten the one they stand in
+        // wedges: the chord's notes light up in its color (root strongest), players lighten the one they stand in
         ring.ClearTints();
         var cur = Current;
         var e = cur != null ? Entry(cur.index) : null;
         int[] tones = e == null ? null : e.white ? new[] { (int)e.root } : Chord.Tones(e.root, e.quality);
         if (tones != null)
         {
-            var c = ChordColour(e);
+            var c = ChordColor(e);
             for (int i = 0; i < tones.Length; i++) ring.Tint(tones[i], new Color(c.r, c.g, c.b, i == 0 ? rootTint : toneTint));
         }
         foreach (var p in players) ring.Tint(p.wedge, new Color(1, 1, 1, playerTint));
@@ -210,8 +210,8 @@ public class GameManager : MonoBehaviour
         // a miss washes over everything and fades out
         missFlash = Mathf.Max(0f, missFlash - dt / missSeconds);
         if (missFlash > 0f)
-            for (int w = 0; w < 12; w++) ring.Tint(w, new Color(missColour.r, missColour.g, missColour.b, missTint * missFlash));
-        bannerLabel.color = Color.Lerp(bannerColour, missColour, missFlash);
+            for (int w = 0; w < 12; w++) ring.Tint(w, new Color(missColor.r, missColor.g, missColor.b, missTint * missFlash));
+        bannerLabel.color = Color.Lerp(bannerColor, missColor, missFlash);
         if (shakeCamera != null) shakeCamera.position = cameraHome + (Vector3)(Random.insideUnitCircle * missShake * missFlash);
         triangle.inPosition = tones != null && !e.white && players.Count == 3 && new HashSet<int>(players.Select(p => p.wedge)).SetEquals(tones);
 
@@ -226,13 +226,13 @@ public class GameManager : MonoBehaviour
         {
             chordLabel.text = Name(e);
             chordNotes.text = e.white ? "one player: Square / X" : Chord.Names[tones[0]] + " + " + Chord.Names[tones[1]] + " + " + Chord.Names[tones[2]];
-            chordLabel.color = ChordColour(e);
+            chordLabel.color = ChordColor(e);
         }
         else { chordLabel.text = ""; chordNotes.text = ""; }
 
         // the red line is the metronome
         coreLine.transform.localScale = Vector3.one * (LandScale + pulseGrow * beatPulse);
-        coreLine.color = new Color(coreColour.r, coreColour.g, coreColour.b, coreColour.a * Mathf.Lerp(pulseDimAlpha, 1f, beatPulse));
+        coreLine.color = new Color(coreColor.r, coreColor.g, coreColor.b, coreColor.a * Mathf.Lerp(pulseDimAlpha, 1f, beatPulse));
 
         int shown = cur != null ? cur.index : nextIndex;
         titleLabel.text = song.name + "   " + song.meter + "   " + Bpm.ToString("0") + " bpm   chord " + (shown % song.entries.Count + 1) + " of " + song.entries.Count + "     L1 / R1 change song   Options restart";
@@ -258,7 +258,7 @@ public class GameManager : MonoBehaviour
         nextIndex++;
     }
 
-    const float ArcDegrees = 28f;   // a wedge is 30; the gap keeps neighbouring arcs apart
+    const float ArcDegrees = 28f;   // a wedge is 30; the gap keeps neighboring arcs apart
     const float ArcWidth = 0.2f;
 
     // an arc over one wedge, the same size as the approach circle; it lives on the ring so it turns with it

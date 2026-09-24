@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// recolours the 12 wedge sprites that sit under this object in the scene. a wedge's resting colour is
+// recolors the 12 wedge sprites that sit under this object in the scene. a wedge's resting color is
 // whatever it has in the Inspector, and its note is where it sits, the same rule the players use
 public class Ring : MonoBehaviour
 {
