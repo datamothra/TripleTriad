@@ -315,7 +315,9 @@ public class GameManager : MonoBehaviour
             for (int v = 0; v < 3; v++) synth.Strike(v, MissThudMidi + v, 1f);      // three low notes a semitone apart, an ugly thud
             ShowBanner("missed " + DisplayName(entry) + ": " + reason, missMessageSeconds);
         }
-        if (turnEveryChords > 0 && ++chordsJudged % turnEveryChords == 0)
+        // a gold chord and the white notes after it count as one chord, so the ring only turns between them, never mid-arpeggio
+        bool endsChord = !EntryAt(chord.entryIndex + 1).white;
+        if (turnEveryChords > 0 && endsChord && ++chordsJudged % turnEveryChords == 0)
             ring.Turn(Random.Range(turnMinWedges, turnMaxWedges + 1) * (turnEitherWay && Random.value < 0.5f ? -1 : 1));
         if (lives <= 0)
         {
